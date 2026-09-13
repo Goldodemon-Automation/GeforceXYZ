@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         const auto method = field(line, "method");
         if (method == "core.hello") {
             std::cout << "{\"type\":\"response\",\"id\":\"" << id
-                      << "\",\"ok\":true,\"result\":{\"protocolVersion\":1,\"capabilities\":[\"settings\",\"nativeStreamer.v6\",\"nativeStreamer.ownedNvstNegotiation\"]}}\n" << std::flush;
+                      << "\",\"ok\":true,\"result\":{\"protocolVersion\":1,\"capabilities\":[\"settings\",\"nativeStreamer.v7\",\"nativeStreamer.ownedNvstNegotiation\"]}}\n" << std::flush;
         } else if (method == "updater.startup.ack") {
             ++startupAcknowledgements;
             std::cout << "{\"type\":\"response\",\"id\":\"" << id
@@ -52,9 +52,12 @@ int main(int argc, char **argv)
         } else if (method == "test.app-context") {
             const auto executable = std::getenv("OPENNOW_APP_EXECUTABLE");
             const auto pid = std::getenv("OPENNOW_APP_PID");
+            const auto pictures = std::getenv("OPENNOW_PICTURES_DIR");
             std::cout << "{\"type\":\"response\",\"id\":\"" << id
                       << "\",\"ok\":true,\"result\":{\"executable\":" << std::quoted(executable ? executable : "")
                       << ",\"pid\":" << std::quoted(pid ? pid : "")
+                      << ",\"picturesDirectory\":" << std::quoted(pictures ? pictures : "")
+                      << ",\"hasPicturesDirectory\":" << (pictures ? "true" : "false")
                       << ",\"startupAcknowledgements\":" << startupAcknowledgements
                       << ",\"hasUpdateEnvironment\":" << (std::getenv("OPENNOW_UPDATE_PLAN") && std::getenv("OPENNOW_UPDATE_NONCE") ? "true" : "false")
                       << "}}\n" << std::flush;

@@ -281,7 +281,7 @@ recovery. A native stop stalled for 30 seconds reports an error without launchin
 another transport over the still-owned resources.
 
 For the embedded Qt client, `session.create` and `streamer.prepare` accept an optional
-`runtimeCapabilities` object copied from the in-process streamer's protocol-6 `hello` response.
+`runtimeCapabilities` object copied from the in-process streamer's protocol-7 `hello` response.
 The core filters its available `videoBackends` by the persisted `nativeVideoBackend` preference
 and resolves codec `auto` to AV1, HEVC, then H.264 (subject to requested color mode) before
 CloudMatch allocation. This resolution is session-local: the saved preference stays `auto`.
@@ -350,7 +350,7 @@ frame rate and bitrate follow the stream; the retained legacy `recordingResoluti
 apply to the next native session. Disabling it sends `replay-stop` immediately,
 clears buffered media and cancels an in-progress clip export.
 
-These commands extend the embedded streamer's protocol-6 JSON payload without
+These commands use the embedded streamer's protocol-7 JSON payload without
 changing the C ABI:
 
 - The `start` response includes `replayEnabled` for the actual session.
@@ -487,6 +487,14 @@ cancelled, because cancellation does not undo an installation already prepared
 by the native helper. Clients must not synthesize `canDownload`, `canInstall`, or
 `canCheck` from an error message. A failed check or a later release check does not
 discard an already verified download.
+
+Inside Flatpak, the updater reports `status: "unsupported"` and
+`updateSource: "flatpak"`. `canCheck`, `canDownload`, `canInstall`, and
+`exitRequired` are false. `updater.check` returns that state without contacting
+GitHub. Download and install requests fail with the package-manager instruction
+in `message`. The core does not recover native update transactions inside the
+sandbox, and the native update helper rejects execution there. Flatpak owns
+package replacement and updates.
 
 The additive updater state fields `exitRequired` and `installVersion` describe
 the prepared installation, separately from `availableVersion` and

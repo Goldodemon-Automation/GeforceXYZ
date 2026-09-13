@@ -40,6 +40,8 @@ class StreamVideoItem : public QQuickItem
                    NOTIFY frameGenerationChanged)
     Q_PROPERTY(bool metalFxUpscaling READ metalFxUpscaling WRITE setMetalFxUpscaling
                    NOTIFY metalFxUpscalingChanged)
+    Q_PROPERTY(bool fsrUpscaling READ fsrUpscaling WRITE setFsrUpscaling
+                   NOTIFY fsrUpscalingChanged)
     Q_PROPERTY(int upscalingSharpness READ upscalingSharpness WRITE setUpscalingSharpness
                    NOTIFY upscalingSharpnessChanged)
     Q_PROPERTY(int upscalingDenoise READ upscalingDenoise WRITE setUpscalingDenoise
@@ -79,6 +81,8 @@ public:
     void setFrameGeneration(bool enabled);
     bool metalFxUpscaling() const;
     void setMetalFxUpscaling(bool enabled);
+    bool fsrUpscaling() const;
+    void setFsrUpscaling(bool enabled);
     int upscalingSharpness() const;
     void setUpscalingSharpness(int value);
     int upscalingDenoise() const;
@@ -105,7 +109,8 @@ public:
                                                         const QSize &videoSize,
                                                         const QSizeF &itemSize);
     [[nodiscard]] static quint16 windowsVirtualKey(
-        int key, Qt::KeyboardModifiers modifiers = Qt::NoModifier);
+        int key, Qt::KeyboardModifiers modifiers = Qt::NoModifier,
+        quint32 nativeVirtualKey = 0);
     [[nodiscard]] static quint16 inputModifiers(Qt::KeyboardModifiers modifiers, int key);
     [[nodiscard]] static QString shortcutActionForInput(
         const QVariantMap &bindings, int key, Qt::KeyboardModifiers modifiers);
@@ -122,6 +127,7 @@ signals:
     void shortcutBindingsChanged();
     void frameGenerationChanged();
     void metalFxUpscalingChanged();
+    void fsrUpscalingChanged();
     void upscalingSharpnessChanged();
     void upscalingDenoiseChanged();
     void frameGenerationStatsChanged();
@@ -163,6 +169,7 @@ private:
     [[nodiscard]] static QRect cursorConfinementRect(const QRect &viewport, bool rawRelative);
     void releaseCursorConfinement();
     void submitAbsoluteMouse(const QPointF &position);
+    [[nodiscard]] static quint16 eventVirtualKey(const QKeyEvent *event);
     [[nodiscard]] quint32 keyIdentity(const QKeyEvent *event) const;
     [[nodiscard]] static quint8 mouseButton(Qt::MouseButton button);
 
@@ -182,6 +189,7 @@ private:
     bool m_clipboardPaste = false;
     bool m_frameGeneration = false;
     bool m_metalFxUpscaling = false;
+    bool m_fsrUpscaling = false;
     int m_upscalingSharpness = 10;
     int m_upscalingDenoise = 0;
     QTimer m_frameStatsTimer;

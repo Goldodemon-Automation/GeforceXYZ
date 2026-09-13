@@ -41,6 +41,11 @@ FocusScope {
         {name:qsTr("Recording"), icon:"settings-video.svg", color:Theme.coral}
     ]
     DesktopSettingsShortcutBinding { id: shortcutBinding }
+    TenBitWarningDialog {
+        id: tenBitWarning
+        settingsStore: ShellStore
+        onClosed: settingsList.forceActiveFocus()
+    }
 
     function titleCase(value) {
         const words = String(value || "").split("-").join(" ").split("_").join(" ").split(" ")
@@ -266,7 +271,7 @@ FocusScope {
                 {t:"Profile", control:"profile", height:121, initial:accountName.slice(0,1).toUpperCase(), name:accountName, tier:membership.toUpperCase(), subtitle:ShellStore.signedIn ? qsTr("NVIDIA account · signed in on this PC") : qsTr("Connect securely with NVIDIA"), meta:ShellStore.sessionPersistence === "os-credential-store" ? qsTr("Protected by the operating system credential store") : qsTr("Session-only profile"), v:ShellStore.signedIn ? qsTr("Manage on nvidia.com") : qsTr("Sign in"), route:ShellStore.signedIn ? "accounts" : "sign-in"},
                 {t:"Profiles", d:"Each profile has its own My games shelf and settings", v:qsTr("%1 saved").arg(ShellStore.savedAccounts.length), route:"accounts"},
                 {t:"Profile PIN", d:"Ask for a 4-digit PIN when switching to this profile", v:"Set up", route:"profile-pin"},
-                toggle("Cloud saves", "Sync Steam / Epic / Ubisoft saves before each session", "enablePersistingInGameSettings"),
+                toggle(qsTr("Persistent in-game settings"), qsTr("Keep your in-game graphics settings between sessions for supported games and memberships. Applies to new sessions."), "enablePersistingInGameSettings"),
                 toggle("Discord Rich Presence", "Show what you're playing on Discord", "discordRichPresence"),
                 choice("Error reporting", "Send anonymous crash reports to help fix OpenNOW", "errorReportingConsent", ["denied","granted"], ["Off","Anonymous"], "segments"),
                 {t:"Sign out", d:"Removes the NVIDIA token from this PC; My games stay", v:"Sign out of NVIDIA", action:"sign-out", danger:true},
@@ -292,17 +297,20 @@ FocusScope {
                 {t:qsTr("HDR"), d:hdrDescription, v:Boolean(settings.enableHdr) ? qsTr("On") : qsTr("Off"), key:"enableHdr", values:[false,true], labels:[qsTr("Off"),qsTr("On")], control:"segments", selectedIndex:Boolean(settings.enableHdr) ? 1 : 0, disabledValues:hdrAvailable ? [] : [true]},
                 {t:"Max bitrate", d:"Maximum requested stream bitrate", v:Number(settings.maxBitrateMbps || 75) + " Mbps", key:"maxBitrateMbps", values:[25,50,75,100,150,200], labels:["25 Mbps","50 Mbps","75 Mbps","100 Mbps","150 Mbps","200 Mbps"], control:"slider", sliderPercent:Number(settings.maxBitrateMbps || 75) / 106},
                 {t:qsTr("Frame generation (Experimental)"), d:qsTr("Targets 120 displayed FPS from a 60 FPS stream. Requires a fast GPU and 120 Hz display; adds latency and artifacts."), v:frameGeneration ? qsTr("2×") : qsTr("Off"), key:"frameGeneration", values:["off","2x"], labels:[qsTr("Off"),qsTr("2×")], control:"segments", selectedIndex:frameGeneration ? 1 : 0},
-                ...(Qt.platform.os === "osx" ? [choice(qsTr("Upscaling"), qsTr("Spatial upscaling for enlarged video. Uses extra GPU time; falls back to normal scaling when MetalFX is unavailable."), "upscaling", ["off", "metalfx"], [qsTr("Off"), "MetalFX"], "segments")] : []),
-                ...(Qt.platform.os === "osx" ? [
-                    {key:"upscalingSharpness", title:qsTr("Clarity"), description:qsTr("Sharpen details before MetalFX upscaling. Set to 0 to disable."), maximum:15, fallback:10},
-                    {key:"upscalingDenoise", title:qsTr("Noise Reduction"), description:qsTr("Smooth noise before MetalFX upscaling. Set to 0 to disable."), maximum:20, fallback:0}
+                choice(qsTr("Upscaling"), Qt.platform.os === "osx"
+                    ? qsTr("Spatial upscaling for enlarged video. Uses extra GPU time; falls back to normal scaling when MetalFX is unavailable.")
+                    : qsTr("FSR 1 upscales enlarged SDR video on the GPU. Uses extra GPU time; HDR and unavailable effects use normal scaling."),
+                    "upscaling", ["off", Qt.platform.os === "osx" ? "metalfx" : "fsr1"], [qsTr("Off"), Qt.platform.os === "osx" ? "MetalFX" : "FSR 1"], "segments"),
+                ...[
+                    {key:"upscalingSharpness", title:qsTr("Clarity"), description:Qt.platform.os === "osx" ? qsTr("Sharpen details before MetalFX upscaling. Set to 0 to disable.") : qsTr("Sharpen details after FSR 1 upscaling. Set to 0 to disable."), maximum:15, fallback:10},
+                    ...(Qt.platform.os === "osx" ? [{key:"upscalingDenoise", title:qsTr("Noise Reduction"), description:qsTr("Smooth noise before MetalFX upscaling. Set to 0 to disable."), maximum:20, fallback:0}] : [])
                 ].map(setting => {
                     const value = Number(settings[setting.key] ?? setting.fallback)
                     const values = Array.from({length:setting.maximum + 1}, (_, index) => index)
                     return {t:setting.title, d:setting.description, v:String(value), key:setting.key,
                         values:values, labels:values.map(String), control:"slider", sliderPercent:value / setting.maximum,
-                        info:settings.upscaling !== "metalfx"}
-                }) : []),
+                        info:settings.upscaling !== (Qt.platform.os === "osx" ? "metalfx" : "fsr1")}
+                }),
                 toggle("Cloud G-Sync", "Variable refresh on G-Sync and FreeSync displays", "enableCloudGsync"),
                 toggle("Stats overlay on launch", "Ctrl+N toggles it in-game", "showStatsOnLaunch"),
                 choice("Stats overlay position", "FPS, RTT, loss and bitrate readout", "statsOverlayPosition", ["top-right","top-left","bottom-right","bottom-left"], ["Top-right","Top-left","Bottom-right","Bottom-left"])
@@ -354,8 +362,8 @@ FocusScope {
             rows.push(toggle("Gyroscope", "Forward motion data to the rig", "enableGyroscopeControls"))
             rows.push(toggle(qsTr("Clipboard paste"), qsTr("Paste local text into the stream with Ctrl+V (Command+V on macOS). Up to 64 KiB per paste. No automatic clipboard sync."), "clipboardPaste"))
             for (const setting of [
-                {key:"controllerLeftStickDeadzone", title:qsTr("Left stick dead zone"), description:qsTr("Ignore stick drift during gameplay. Default: 24%. The remaining travel is rescaled to full range."), maximum:50, fallback:24},
-                {key:"controllerRightStickDeadzone", title:qsTr("Right stick dead zone"), description:qsTr("Ignore stick drift during gameplay. Default: 27%. Set to 0% to leave dead zones to the game."), maximum:50, fallback:27},
+                {key:"controllerLeftStickDeadzone", title:qsTr("Left stick dead zone"), description:qsTr("Ignore stick drift during gameplay. Default: 5%. The remaining travel is rescaled to full range."), maximum:50, fallback:5},
+                {key:"controllerRightStickDeadzone", title:qsTr("Right stick dead zone"), description:qsTr("Ignore stick drift during gameplay. Default: 5%. Set to 0% to leave dead zones to the game."), maximum:50, fallback:5},
                 {key:"controllerVibrationIntensity", title:qsTr("Controller vibration"), description:qsTr("Scale game vibration on supported controllers. Set to 0% to disable."), maximum:100, fallback:100}
             ]) {
                 const value = Number(settings[setting.key] ?? setting.fallback)
@@ -500,6 +508,8 @@ FocusScope {
                 ShellStore.setSetting("colorQuality", currentQuality.replace("444", "420"))
         }
         root.closeDropdown()
+        if (key === "colorQuality")
+            tenBitWarning.notifySelection(currentQuality, value)
     }
 
     function activate(row) {
@@ -617,7 +627,8 @@ FocusScope {
         repeat: false
         onTriggered: {
             root.dropdownPresented = false
-            settingsList.forceActiveFocus()
+            if (!tenBitWarning.visible)
+                settingsList.forceActiveFocus()
         }
     }
 

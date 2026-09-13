@@ -5,6 +5,27 @@ use sha2::{Digest, Sha256};
 use std::sync::OnceLock;
 use tempfile::TempDir;
 
+#[test]
+fn flatpak_detection_accepts_environment_or_sandbox_marker() {
+    use std::ffi::OsStr;
+
+    let directory = tempfile::tempdir().unwrap();
+    let info = directory.path().join(".flatpak-info");
+    assert!(!is_flatpak_installation(None, &info));
+    assert!(!is_flatpak_installation(Some(OsStr::new("")), &info));
+    assert!(is_flatpak_installation(
+        Some(OsStr::new("io.github.opencloudgaming.OpenNOW")),
+        &info
+    ));
+    fs::write(
+        &info,
+        b"[Application]\nname=io.github.opencloudgaming.OpenNOW\n",
+    )
+    .unwrap();
+    assert!(is_flatpak_installation(None, &info));
+    assert!(is_flatpak_installation(Some(OsStr::new("")), &info));
+}
+
 fn signed_manifest(asset: &str, bytes: &[u8]) -> (verification::UpdateManifest, SigningKey) {
     let key = SigningKey::from_bytes(&[91; 32]);
     let mut manifest = verification::UpdateManifest {
@@ -692,6 +713,29 @@ fn advisory_lock_distinguishes_live_helper_from_stale_outcomes() {
     assert!(helper_is_running(&prepared).unwrap());
     FileExt::unlock(&lock).unwrap();
     assert!(!helper_is_running(&prepared).unwrap());
+}
+
+#[cfg(unix)]
+#[test]
+fn transaction_lock_releases_ownership_with_an_inherited_descriptor_open() {
+    let directory = TempDir::new().unwrap();
+    let path = directory.path().join("apply.lock");
+    let file = OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&path)
+        .unwrap();
+    let owner = TransactionLock::acquire(file).unwrap();
+    let inherited = owner.0.try_clone().unwrap();
+    let next = OpenOptions::new().write(true).open(&path).unwrap();
+    assert_eq!(
+        next.try_lock_exclusive().unwrap_err().raw_os_error(),
+        fs2::lock_contended_error().raw_os_error()
+    );
+    drop(owner);
+    next.try_lock_exclusive().unwrap();
+    FileExt::unlock(&next).unwrap();
+    drop(inherited);
 }
 
 #[test]

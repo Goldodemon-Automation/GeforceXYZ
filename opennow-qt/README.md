@@ -5,6 +5,9 @@ or newer and uses SDL3 for controller input. A bundled Rust process owns setting
 and is the start of the shell-neutral application core. See
 `docs/qt-migration.md` for the migration history and remaining release checklist.
 
+For a sandboxed Linux x86_64 package, follow [Build and install the Flatpak](packaging/flatpak/README.md).
+The separate **Qt Flatpak build** workflow produces an installable bundle without publishing a release.
+
 ## CI checks and manual builds
 
 Pull requests and pushes to `dev` or `main` run workflow lint, packaging-contract
@@ -78,8 +81,8 @@ signer described in the [signing setup guide](../docs/update-signing-setup.md); 
 [nightly release runbook](../docs/qt-nightly-release.md) for the publishing command. Users of
 earlier no-key nightlies must manually install an update-enabled build once before verified
 in-app updates can work. Windows may show a SmartScreen warning; macOS packages are not notarized.
-Windows ARM64 is cross-built rather than runtime-tested. Linux DEBs require Qt 6.8+ and SDL3;
-AppImages are the portable option. Download the files and distribute them through
+Windows ARM64 is cross-built rather than runtime-tested. Release Linux DEBs bundle Qt and SDL3
+for Ubuntu 24.04 / Linux Mint 22.x; AppImages are the portable option. Download the files and distribute them through
 your supporter channel. **Actions artifacts in this public repository are not
 private or supporter-access-controlled**, even though they do not appear in Releases.
 
@@ -551,6 +554,21 @@ and `--smoke-test --desktop --route stream --overlay desktop-stream-menu
 `--smoke-microphone` acceptance workload checks state, commands and reconnect mute
 preservation against a mock runtime.
 
+Settings → Audio contains two independent, default-off background options.
+**Mute when out of focus** silences local playback while another app is active and
+restores it on return. It does not pause video, microphone capture, or recording.
+**Background stream reminder** requests taskbar or dock attention every five minutes
+while a session is streaming in the background. Returning to OpenNOW, ending the
+stream, or disabling the option stops the timer. Desktop support determines how
+the attention request appears; this is not an AFK-timeout warning or anti-AFK control.
+
+Run `ctest --test-dir build/opennow-qt -R qml-background-stream --output-on-failure`
+to check toggles, focus transitions, reminder cancellation, and runtime restart state.
+For live acceptance, enable both options and switch apps during a stream in windowed
+and fullscreen modes, with the stream menu open and closed. Check silence on leaving,
+audio restoration on return, uninterrupted video and recording, and attention after
+five minutes away. Repeat with each option disabled independently.
+
 Settings → Controls → **Clipboard paste** enables local-to-stream plain-text paste
 with Ctrl+V (Command+V on macOS). The console Controls page exposes the same persisted
 `clipboardPaste` preference. It is disabled by default and only reads the clipboard
@@ -581,7 +599,7 @@ they also duplicate input.
 **Settings → Input & controllers** includes independent left/right stick dead zones
 (0–50%) and controller vibration intensity (0–100%) in both desktop and console mode.
 These global preferences are saved and apply without restarting the session. Defaults
-are 24% left and 27% right, rounded from the XInput-style thresholds used by OpenNOW-Mac.
+are 5% for both sticks. Existing saved preferences are preserved.
 The radial filter suppresses resting drift and rescales the remaining travel, preserving
 full axis and diagonal output. Set either stick to 0% to leave its dead zone to the game;
 shell navigation retains its separate press/release thresholds.
@@ -649,7 +667,7 @@ The versioned Rust core owns settings, NVIDIA device login and token refresh,
 OS-protected accounts, PINs, catalogs, subscriptions, regions and latency tests,
 account connections, persistent storage, CloudMatch lifecycle/recovery/ads,
 NVST session orchestration, diagnostics, media listing, Discord, telemetry,
-feedback and update discovery. The protocol-v6 native streamer is linked into
+feedback and update discovery. The protocol-v7 native streamer is linked into
 the Qt executable as an in-process Rust library. It owns NVST RTSPS negotiation,
 Mjolnir video, the ICE/DTLS/SCTP control bundle, decode, audio and native input.
 Qt/QML owns stream status, stats, menus, recovery, failure and fullscreen

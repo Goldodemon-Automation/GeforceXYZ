@@ -157,6 +157,9 @@ ApplicationWindow {
 
     Connections {
         target: ShellStore
+        function onBackgroundStreamReminderRequested() {
+            AppController.requestWindowAttention(window)
+        }
         function onFullscreenToggleRequested() {
             if (window.activeRoute === "stream")
                 window.toggleFullscreen()
@@ -175,12 +178,12 @@ ApplicationWindow {
     Binding {
         target: ControllerInput
         property: "leftStickDeadzone"
-        value: Number(ShellStore.settings.controllerLeftStickDeadzone ?? 24)
+        value: Number(ShellStore.settings.controllerLeftStickDeadzone ?? 5)
     }
     Binding {
         target: ControllerInput
         property: "rightStickDeadzone"
-        value: Number(ShellStore.settings.controllerRightStickDeadzone ?? 27)
+        value: Number(ShellStore.settings.controllerRightStickDeadzone ?? 5)
     }
     Binding {
         target: ControllerInput

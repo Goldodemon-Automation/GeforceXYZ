@@ -1,5 +1,11 @@
 include(CTest)
 if(BUILD_TESTING)
+    qt_add_executable(opennow-applicationicons-tests tests/tst_applicationicons.cpp)
+    target_link_libraries(opennow-applicationicons-tests PRIVATE Qt6::Test Qt6::Gui)
+    opennow_add_application_icons(opennow-applicationicons-tests)
+    add_test(NAME opennow-applicationicons-tests COMMAND opennow-applicationicons-tests -o -,txt)
+    set_tests_properties(opennow-applicationicons-tests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 20)
     qt_add_executable(opennow-graphicsdevices-tests tests/tst_graphicsdeviceselection.cpp
         src/app/platform/GraphicsDeviceSelection.cpp src/app/platform/GraphicsDeviceSelection.h)
     target_include_directories(opennow-graphicsdevices-tests PRIVATE src)
@@ -32,7 +38,11 @@ if(BUILD_TESTING)
         target_link_libraries(opennow-hdrcolor-tests PRIVATE "-framework QuartzCore")
     endif()
     if(MSVC)
-        target_compile_options(opennow-hdrcolor-tests PRIVATE /Zi)
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.25)
+            set_property(TARGET opennow-hdrcolor-tests PROPERTY MSVC_DEBUG_INFORMATION_FORMAT Embedded)
+        else()
+            target_compile_options(opennow-hdrcolor-tests PRIVATE /Zi)
+        endif()
         target_link_options(opennow-hdrcolor-tests PRIVATE /DEBUG)
     endif()
     qt_add_shaders(opennow-hdrcolor-tests "opennow-hdrcolor-test-shaders"
@@ -42,6 +52,31 @@ if(BUILD_TESTING)
     qt_add_shaders(opennow-hdrcolor-tests "opennow-hdrchrome-test-shaders"
         BATCHABLE PREFIX "/opennow/shaders" BASE "shaders" FILES ${OPENNOW_CHROME_SHADERS})
     find_package(Qt6 6.8 REQUIRED COMPONENTS QuickTest)
+    qt_add_executable(opennow-hevchelp-tests tests/tst_hevchelp.cpp)
+    target_link_libraries(opennow-hevchelp-tests PRIVATE Qt6::QuickTest Qt6::Quick)
+    target_compile_definitions(opennow-hevchelp-tests PRIVATE
+        OPENNOW_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
+    add_test(NAME opennow-hevchelp-tests COMMAND opennow-hevchelp-tests
+        -input "${CMAKE_CURRENT_SOURCE_DIR}/tests/hevchelp")
+    set_tests_properties(opennow-hevchelp-tests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 30)
+    qt_add_executable(opennow-tenbitwarning-tests tests/tst_tenbitwarning.cpp)
+    target_link_libraries(opennow-tenbitwarning-tests PRIVATE Qt6::QuickTest Qt6::Quick)
+    target_compile_definitions(opennow-tenbitwarning-tests PRIVATE
+        OPENNOW_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
+    add_test(NAME opennow-tenbitwarning-tests COMMAND opennow-tenbitwarning-tests
+        -input "${CMAKE_CURRENT_SOURCE_DIR}/tests/tenbitwarning")
+    set_tests_properties(opennow-tenbitwarning-tests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 30)
+    qt_add_resources(opennow-qt "ten-bit-warning-acceptance"
+        PREFIX "/acceptance" BASE tests FILES tests/TenBitWarningAcceptance.qml)
+    foreach(surface desktop console)
+        add_test(NAME qml-ten-bit-warning-${surface} COMMAND opennow-qt
+            --smoke-test --allow-multiple-instances --${surface} --route settings-streaming
+            --smoke-ten-bit-warning --reduced-motion)
+        set_tests_properties(qml-ten-bit-warning-${surface} PROPERTIES
+            ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 15)
+    endforeach()
     qt_add_executable(opennow-consolelayout-tests tests/tst_consolelayout.cpp)
     target_link_libraries(opennow-consolelayout-tests PRIVATE Qt6::QuickTest Qt6::Quick)
     target_compile_definitions(opennow-consolelayout-tests PRIVATE
@@ -178,6 +213,10 @@ if(BUILD_TESTING)
     target_link_libraries(opennow-theme-tests PRIVATE Qt6::QuickTest Qt6::Quick)
     target_compile_definitions(opennow-theme-tests PRIVATE
         OPENNOW_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
+    qt_add_resources(opennow-theme-tests "theme-test-assets"
+        PREFIX "/qt/qml/OpenNOW" FILES ${OPENNOW_KEYBOARD_ICON_FILES}
+        res/brand/opennow-mark.png res/icons/desktop-play.svg
+        res/icons/store-steam.svg res/icons/store-epic.svg res/icons/store-xbox.svg)
     add_test(NAME opennow-theme-tests COMMAND opennow-theme-tests
         -input "${CMAKE_CURRENT_SOURCE_DIR}/tests/theme")
     set_tests_properties(opennow-theme-tests PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 30)
@@ -218,6 +257,13 @@ if(BUILD_TESTING)
     target_include_directories(opennow-framepacer-tests PRIVATE src)
     target_link_libraries(opennow-framepacer-tests PRIVATE Qt6::Test)
     add_test(NAME opennow-framepacer-tests COMMAND opennow-framepacer-tests -o -,txt)
+    qt_add_executable(opennow-fsrupscaler-tests tests/tst_fsrupscaler.cpp)
+    target_include_directories(opennow-fsrupscaler-tests PRIVATE src)
+    target_link_libraries(opennow-fsrupscaler-tests PRIVATE Qt6::Test Qt6::Gui Qt6::GuiPrivate)
+    qt_add_shaders(opennow-fsrupscaler-tests "opennow-fsr-composition-test-shaders"
+        PREFIX "/opennow/shaders" BASE "shaders"
+        FILES shaders/framegen.vert shaders/streamvideo.vert shaders/streamvideo.frag)
+    opennow_add_fsr_shaders(opennow-fsrupscaler-tests)
     qt_add_executable(opennow-frameinterpolator-tests
         tests/tst_frameinterpolator.cpp
         src/streaming/rendering/StreamFrameInterpolator.cpp)
@@ -230,6 +276,9 @@ if(BUILD_TESTING)
         find_program(OPENNOW_XVFB_RUN xvfb-run)
     endif()
     if(OPENNOW_XVFB_RUN)
+        add_test(NAME opennow-fsrupscaler-tests
+            COMMAND "${OPENNOW_XVFB_RUN}" -a "$<TARGET_FILE:opennow-fsrupscaler-tests>" -o -,txt)
+        set_tests_properties(opennow-fsrupscaler-tests PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=xcb")
         add_test(NAME opennow-hdrcolor-tests
             COMMAND "${OPENNOW_XVFB_RUN}" -a "$<TARGET_FILE:opennow-hdrcolor-tests>" -o -,txt)
         set_tests_properties(opennow-hdrcolor-tests PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=xcb")
@@ -237,10 +286,12 @@ if(BUILD_TESTING)
             COMMAND "${OPENNOW_XVFB_RUN}" -a "$<TARGET_FILE:opennow-frameinterpolator-tests>" -o -,txt)
         set_tests_properties(opennow-frameinterpolator-tests PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=xcb")
     else()
+        add_test(NAME opennow-fsrupscaler-tests COMMAND opennow-fsrupscaler-tests -o -,txt)
         add_test(NAME opennow-hdrcolor-tests COMMAND opennow-hdrcolor-tests -o -,txt)
         add_test(NAME opennow-frameinterpolator-tests COMMAND opennow-frameinterpolator-tests -o -,txt)
         if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
-            set_tests_properties(opennow-frameinterpolator-tests PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+            set_tests_properties(opennow-frameinterpolator-tests opennow-fsrupscaler-tests
+                PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         endif()
     endif()
     if(WIN32)
@@ -249,6 +300,7 @@ if(BUILD_TESTING)
     endif()
     set_tests_properties(opennow-hdrcolor-tests PROPERTIES TIMEOUT 60)
     set_tests_properties(opennow-frameinterpolator-tests PROPERTIES TIMEOUT 60)
+    set_tests_properties(opennow-fsrupscaler-tests PROPERTIES TIMEOUT 60)
     if(WIN32)
         set_tests_properties(opennow-frameinterpolator-tests PROPERTIES
             RUN_SERIAL TRUE TIMEOUT 180)
@@ -272,7 +324,7 @@ if(BUILD_TESTING)
     endif()
     set_tests_properties(opennow-streamcolor-tests PROPERTIES TIMEOUT 60)
     qt_add_resources(opennow-qt "region-ping-acceptance"
-        PREFIX "/acceptance" BASE tests FILES tests/RegionPingAcceptance.qml tests/RegionChoicesAcceptance.qml tests/StorePagingAcceptance.qml tests/BackendAvailabilityAcceptance.qml tests/StreamRecoveryAcceptance.qml tests/IdleModeAcceptance.qml tests/FrameGenerationAcceptance.qml tests/AudioOutputAcceptance.qml tests/CollectionsAcceptance.qml tests/SteamBigPictureAcceptance.qml tests/ControllerMetadataAcceptance.qml tests/MicrophoneAcceptance.qml tests/RecordingAcceptance.qml)
+        PREFIX "/acceptance" BASE tests FILES tests/RegionPingAcceptance.qml tests/RegionChoicesAcceptance.qml tests/StorePagingAcceptance.qml tests/BackendAvailabilityAcceptance.qml tests/StreamRecoveryAcceptance.qml tests/IdleModeAcceptance.qml tests/FrameGenerationAcceptance.qml tests/AudioOutputAcceptance.qml tests/CollectionsAcceptance.qml tests/SteamBigPictureAcceptance.qml tests/PersistentInGameSettingsAcceptance.qml tests/ControllerMetadataAcceptance.qml tests/MicrophoneAcceptance.qml tests/RecordingAcceptance.qml)
     add_test(NAME qml-recording
         COMMAND opennow-qt --smoke-test --allow-multiple-instances --desktop
             --route settings --smoke-recording --reduced-motion)
@@ -301,6 +353,12 @@ if(BUILD_TESTING)
         COMMAND opennow-qt --smoke-test --allow-multiple-instances --desktop
             --route settings-audio --smoke-audio-output --reduced-motion)
     set_tests_properties(qml-audio-output PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 10)
+    qt_add_resources(opennow-qt "background-stream-acceptance"
+        PREFIX "/acceptance" BASE tests FILES tests/BackgroundStreamAcceptance.qml)
+    add_test(NAME qml-background-stream
+        COMMAND opennow-qt --smoke-test --allow-multiple-instances --desktop
+            --route settings-audio --smoke-background-stream --reduced-motion)
+    set_tests_properties(qml-background-stream PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 10)
     foreach(width 960 1440)
         add_test(NAME "qml-collections-${width}"
             COMMAND opennow-qt --smoke-test --allow-multiple-instances --desktop
@@ -348,6 +406,10 @@ if(BUILD_TESTING)
         COMMAND opennow-qt --smoke-test --allow-multiple-instances --desktop
             --route settings-streaming --smoke-steam-big-picture --reduced-motion)
     set_tests_properties(qml-steam-big-picture PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 10)
+    add_test(NAME qml-persistent-in-game-settings
+        COMMAND opennow-qt --smoke-test --allow-multiple-instances --desktop
+            --route settings-streaming --smoke-persistent-in-game-settings --reduced-motion)
+    set_tests_properties(qml-persistent-in-game-settings PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 10)
     add_test(NAME qml-frame-generation
         COMMAND opennow-qt --smoke-test --allow-multiple-instances --desktop
             --route settings-streaming --smoke-frame-generation --reduced-motion)
@@ -462,6 +524,7 @@ if(BUILD_TESTING)
         ${OPENNOW_STREAM_PRESENTATION_SOURCES}
     )
     target_include_directories(opennow-streamvideo-tests PRIVATE src)
+    opennow_add_fsr_shaders(opennow-streamvideo-tests)
     qt_add_shaders(opennow-streamvideo-tests "opennow-stream-test-shaders"
         PREFIX "/opennow/shaders"
         BASE "shaders"
@@ -488,6 +551,7 @@ if(BUILD_TESTING)
             src/streaming/rendering/StreamFrameInterpolator.cpp
             src/streaming/rendering/LinuxVulkanGraphics.cpp)
         target_include_directories(opennow-nativeframegeneration-tests PRIVATE src)
+        opennow_add_fsr_shaders(opennow-nativeframegeneration-tests)
         target_link_libraries(opennow-nativeframegeneration-tests PRIVATE
             Qt6::Test Qt6::GuiPrivate Qt6::Quick Qt6::QuickPrivate opennow-streamer-ffi opennow-platform-hdr)
         if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -679,6 +743,8 @@ if(BUILD_TESTING)
         TIMEOUT 30
     )
     set(OPENNOW_CI_UNIT_TEST_TARGETS
+        opennow-applicationicons-tests
+        opennow-tenbitwarning-tests
         opennow-graphicsdevices-tests
         opennow-consolelayout-tests
         opennow-consoleactions-tests
@@ -690,6 +756,7 @@ if(BUILD_TESTING)
         opennow-theme-tests
         opennow-framepacer-tests
         opennow-frameinterpolator-tests
+        opennow-fsrupscaler-tests
         opennow-streamcolor-tests
         opennow-localization-tests
         opennow-qt-tests
@@ -720,6 +787,8 @@ if(BUILD_TESTING)
         # Qt's executable helper defaults to the GUI subsystem on Windows. Keep
         # test runners as console programs so CTest captures QtTest failures.
         set_target_properties(
+            opennow-applicationicons-tests
+            opennow-tenbitwarning-tests
             opennow-graphicsdevices-tests
             opennow-consolelayout-tests
             opennow-consoleactions-tests
@@ -728,6 +797,7 @@ if(BUILD_TESTING)
             opennow-streamtoasts-tests
             opennow-waylandhdroutput-tests
             opennow-frameinterpolator-tests
+            opennow-fsrupscaler-tests
             opennow-localization-tests
             opennow-qt-tests
             opennow-coreclient-tests
@@ -775,6 +845,8 @@ if(BUILD_TESTING)
             add_dependencies(opennow-qt-test-runtime opennow-msvc-runtime)
         endif()
         foreach(test_target IN ITEMS
+                opennow-applicationicons-tests
+                opennow-tenbitwarning-tests
                 opennow-graphicsdevices-tests
                 opennow-consolelayout-tests
                 opennow-consoleactions-tests
@@ -782,6 +854,7 @@ if(BUILD_TESTING)
                 opennow-streamtoasts-tests
                 opennow-waylandhdroutput-tests
                 opennow-hdrcolor-tests
+                opennow-fsrupscaler-tests
                 opennow-localization-tests
                 opennow-qt-tests
                 opennow-coreclient-tests

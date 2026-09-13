@@ -901,7 +901,7 @@ fn build_create_body(app_id: &str, params: &Value, settings: &Value, device_id: 
     };
     let cloud_gsync = resolved_cloud_gsync(settings);
     let reflex = cloud_gsync || fps >= 120;
-    let persistence = setting_bool(settings, "enablePersistingInGameSettings", false)
+    let persistence = setting_bool(settings, "enablePersistingInGameSettings", true)
         && params["supportsInGameSettingsPersistence"].as_bool() == Some(true);
     let physical_resolution = json!({
         "horizontalPixels": width,
@@ -2429,7 +2429,7 @@ mod tests {
 
     #[test]
     fn hdr_444_request_and_accepted_session_preserve_wire_chroma() {
-        let capabilities = json!({"protocolVersion":6,"nativeHdrSupported":true,"videoBackends":[{
+        let capabilities = json!({"protocolVersion":7,"nativeHdrSupported":true,"videoBackends":[{
             "backend":"d3d11","available":true,"codecs":[
                 {"codec":"h265","available":true,"hdrSupported":true,
                     "colorQualities":["10bit_444"],"hdrColorQualities":["10bit_444"]}
@@ -2468,7 +2468,7 @@ mod tests {
 
     #[test]
     fn hdr_request_requires_resolved_runtime_opt_in_and_uses_cloudmatch_enums() {
-        let capabilities = json!({"protocolVersion":6,"nativeHdrSupported":true,"videoBackends":[{
+        let capabilities = json!({"protocolVersion":7,"nativeHdrSupported":true,"videoBackends":[{
             "backend":"d3d11","available":true,"codecs":[
                 {"codec":"h265","available":true,"colorQualities":["8bit_420","10bit_420"]}
             ]
@@ -2558,6 +2558,46 @@ mod tests {
         );
         assert_eq!(accepted_hdr_mode(&json!({})), None);
         assert_eq!(accepted_hdr_mode(&json!({"sdrHdrMode":2})), Some(0));
+    }
+
+    #[test]
+    fn in_game_settings_persistence_defaults_on_and_requires_game_support() {
+        for preference in [Value::Null, json!(false), json!(true)] {
+            for support in [Value::Null, json!(false), json!(true)] {
+                let mut params = json!({});
+                let mut settings = json!({});
+                if !support.is_null() {
+                    params["supportsInGameSettingsPersistence"] = support.clone();
+                }
+                if !preference.is_null() {
+                    settings["enablePersistingInGameSettings"] = preference.clone();
+                }
+                let body = build_create_body("123", &params, &settings, "stable-device");
+                assert_eq!(
+                    body["sessionRequestData"]["enablePersistingInGameSettings"],
+                    preference != false && support == true
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn resume_preserves_in_game_settings_persistence_despite_preference_changes() {
+        for enabled in [false, true] {
+            let original = json!({"sessionRequestData": {
+                "enablePersistingInGameSettings": enabled
+            }});
+            let body = build_resume_body(
+                "123",
+                &original,
+                &json!({"enablePersistingInGameSettings": !enabled}),
+                "stable-device",
+            );
+            assert_eq!(
+                body["sessionRequestData"]["enablePersistingInGameSettings"],
+                enabled
+            );
+        }
     }
 
     #[test]
@@ -2878,7 +2918,7 @@ mod tests {
         }});
         preserve_session_codec(&mut initial, &request);
         assert_eq!(initial["negotiatedStreamProfile"]["codec"], "H265");
-        let capabilities = json!({"protocolVersion":6,"nativeHdrSupported":true,"videoBackends":[{
+        let capabilities = json!({"protocolVersion":7,"nativeHdrSupported":true,"videoBackends":[{
             "backend":"videotoolbox","platform":"macos","available":true,"codecs":[{
                 "codec":"h265","available":true,"hdrSupported":true,
                 "colorQualities":["10bit_420"],"hdrColorQualities":["10bit_420"]
@@ -3060,7 +3100,7 @@ mod tests {
     #[test]
     fn nested_negotiated_codec_reaches_hdr_preparation() {
         let base = Url::parse(DEFAULT_STREAMING_BASE).unwrap();
-        let capabilities = json!({"protocolVersion":6,"nativeHdrSupported":true,"videoBackends":[{
+        let capabilities = json!({"protocolVersion":7,"nativeHdrSupported":true,"videoBackends":[{
             "backend":"videotoolbox","platform":"macos","available":true,"codecs":[{
                 "codec":"h265","available":true,"hdrSupported":true,
                 "colorQualities":["10bit_420"],"hdrColorQualities":["10bit_420"]

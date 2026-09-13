@@ -176,7 +176,10 @@ class SignedNightlyReleaseTest(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/qt-ci.yml").read_text()
         signer = workflow.split("  sign-nightly:\n", 1)[1].split("  publish-nightly:\n", 1)[0]
         publisher = workflow.split("  publish-nightly:\n", 1)[1]
-        self.assertIn("runs-on: [self-hosted, opennow-release-signer]", signer)
+        self.assertIn("runs-on: blacksmith-2vcpu-ubuntu-2404", signer)
+        self.assertIn("timeout-minutes: 30", signer)
+        self.assertIn("name: Verify signing tools", signer)
+        self.assertNotIn("actions/cache", signer)
         self.assertIn("environment: qt-update-signing", signer)
         self.assertIn("needs: [preflight, contracts, checks, build]", signer)
         self.assertIn("ref: ${{ github.sha }}", signer)
@@ -189,7 +192,9 @@ class SignedNightlyReleaseTest(unittest.TestCase):
         for forbidden in ("cargo ", "cmake ", "unsigned-release/", "signed-release/"):
             self.assertNotIn("run: " + forbidden, signer)
         self.assertIn("update_public_key: ${{ inputs.public_key }}", workflow)
-        self.assertIn("**Known issue: Alliance Partners are not working correctly in this build.**", publisher)
+        self.assertIn('--title "OpenNOW v$RELEASE_VERSION" --generate-notes', publisher)
+        self.assertNotIn("--notes-file", publisher)
+        self.assertNotIn("nightly-notes.md", publisher)
         preflight = workflow.split("  preflight:\n", 1)[1].split("  contracts:\n", 1)[0]
         self.assertIn("if: github.event_name == 'workflow_dispatch'", preflight)
         outside_signer = workflow.replace(signer, "")

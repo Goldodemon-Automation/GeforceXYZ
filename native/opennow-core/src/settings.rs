@@ -310,7 +310,12 @@ impl SettingsStore {
             "8bit_420",
         );
         normalize_choice(&mut self.values, "frameGeneration", &["off", "2x"], "off");
-        normalize_choice(&mut self.values, "upscaling", &["off", "metalfx"], "off");
+        normalize_choice(
+            &mut self.values,
+            "upscaling",
+            &["off", "metalfx", "fsr1"],
+            "off",
+        );
         clamp_integer(&mut self.values, "upscalingSharpness", 0, 15, 10);
         clamp_integer(&mut self.values, "upscalingDenoise", 0, 20, 0);
         for key in ["decoderPreference", "encoderPreference"] {
@@ -369,8 +374,8 @@ impl SettingsStore {
             crate::version::update_channel(crate::version::APPLICATION_VERSION),
         );
         clamp_integer(&mut self.values, "mouseAcceleration", 1, 150, 1);
-        clamp_integer(&mut self.values, "controllerLeftStickDeadzone", 0, 50, 24);
-        clamp_integer(&mut self.values, "controllerRightStickDeadzone", 0, 50, 27);
+        clamp_integer(&mut self.values, "controllerLeftStickDeadzone", 0, 50, 5);
+        clamp_integer(&mut self.values, "controllerRightStickDeadzone", 0, 50, 5);
         clamp_integer(
             &mut self.values,
             "controllerVibrationIntensity",
@@ -863,6 +868,7 @@ fn defaults() -> Map<String, Value> {
         "nativeExternalRenderer":false, "transportMode":"nvst", "showNativeStreamerStats":false,
         "codec":"auto", "fallbackCodec":"auto", "decoderPreference":"auto",
         "encoderPreference":"auto", "colorQuality":"8bit_420", "enableHdr":false, "region":"",
+        "suppressTenBitWarning":false,
         "sessionProxyEnabled":false, "sessionProxyUrl":"", "clipboardPaste":false,
         "enableGyroscopeControls":false, "steamControllerCompatibilityMode":false,
         "nativeCursorOverlay":true, "mouseSensitivity":1, "mouseAcceleration":1,
@@ -872,6 +878,7 @@ fn defaults() -> Map<String, Value> {
         "shortcutScreenshot":"Ctrl+F11", "shortcutToggleRecording":"F12",
         "shortcutSaveClip":"Ctrl+F12",
         "microphoneMode":"disabled", "microphoneDeviceId":"", "hideStreamButtons":false,
+        "muteWhenOutOfFocus":false, "backgroundStreamReminder":false,
         "showAntiAfkIndicator":true, "antiAfkReminderEveryMinutes":15,
         "antiAfkReminderDurationSeconds":5, "showStatsOnLaunch":false,
         "statsOverlayPosition":"top-right", "hideServerSelector":false,
@@ -884,7 +891,7 @@ fn defaults() -> Map<String, Value> {
         "appAccentColor":"green", "appTheme":"auto", "appLanguage":"system", "themePack":"nocturne", "translucentUI":false,
         "showTileLabels":true,
         "controllerMode":true, "controllerModePromptDismissed":false,
-        "controllerLeftStickDeadzone":24, "controllerRightStickDeadzone":27,
+        "controllerLeftStickDeadzone":5, "controllerRightStickDeadzone":5,
         "controllerVibrationIntensity":100,
         "reducedMotion":false,
         "launchInConsoleMode":false, "consoleProfilePickerOnLaunch":true,
@@ -895,7 +902,7 @@ fn defaults() -> Map<String, Value> {
         "showSessionReport":true, "showSessionTimeRemainingInStatsOverlay":false,
         "sessionClockShowEveryMinutes":60, "sessionClockShowDurationSeconds":30,
         "windowWidth":1400, "windowHeight":900, "keyboardLayout":"en-US",
-        "gameLanguage":"en_US", "enablePersistingInGameSettings":false, "enableL4S":false,
+        "gameLanguage":"en_US", "enablePersistingInGameSettings":true, "enableL4S":false,
         "identifyAsSteamDeck":false, "steamBigPictureMode":false,
         "enableCloudGsync":false, "discordRichPresence":false,
         "autoCheckForUpdates":true, "autoDownloadUpdates":false,
@@ -1082,6 +1089,61 @@ mod tests {
                 json!(false)
             );
         }
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn background_stream_preferences_are_opt_in_and_persisted() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = env::temp_dir().join(format!("opennow-background-stream-{unique}"));
+        let mut store = SettingsStore::load(Some(directory.clone())).unwrap();
+        for key in ["muteWhenOutOfFocus", "backgroundStreamReminder"] {
+            assert_eq!(store.all()[key], json!(false));
+            store.set(key, json!(true)).unwrap();
+        }
+        let mut store = SettingsStore::load(Some(directory.clone())).unwrap();
+        for key in ["muteWhenOutOfFocus", "backgroundStreamReminder"] {
+            assert_eq!(store.all()[key], json!(true));
+            for invalid in [json!("true"), json!(1), json!(null), json!([])] {
+                assert_eq!(store.set(key, invalid).unwrap(), json!(false));
+            }
+        }
+        let store = SettingsStore::load(Some(directory.clone())).unwrap();
+        assert_eq!(store.all()["muteWhenOutOfFocus"], json!(false));
+        assert_eq!(store.all()["backgroundStreamReminder"], json!(false));
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn ten_bit_warning_opt_out_is_typed_persisted_and_resettable() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = env::temp_dir().join(format!("opennow-ten-bit-warning-{unique}"));
+        let mut store = SettingsStore::load(Some(directory.clone())).unwrap();
+        assert_eq!(store.all()["suppressTenBitWarning"], json!(false));
+        store.set("suppressTenBitWarning", json!(true)).unwrap();
+        store = SettingsStore::load(Some(directory.clone())).unwrap();
+        assert_eq!(store.all()["suppressTenBitWarning"], json!(true));
+        for invalid in [json!("true"), json!(1), json!(null), json!([])] {
+            assert_eq!(
+                store.set("suppressTenBitWarning", invalid).unwrap(),
+                json!(false)
+            );
+        }
+        store.set("suppressTenBitWarning", json!(true)).unwrap();
+        assert_eq!(
+            store.reset().unwrap()["suppressTenBitWarning"],
+            json!(false)
+        );
+        assert_eq!(
+            SettingsStore::load(Some(directory.clone())).unwrap().all()["suppressTenBitWarning"],
+            json!(false)
+        );
         fs::remove_dir_all(directory).unwrap();
     }
 
@@ -1303,6 +1365,41 @@ mod tests {
         assert!(store.set("appAccentColor", json!("green")).is_err());
         assert_eq!(store.all(), before);
         fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn in_game_settings_persistence_survives_restart_and_resets() {
+        let directory = tempfile::tempdir().unwrap();
+        let load = || SettingsStore::load(Some(directory.path().to_owned())).unwrap();
+        let mut store = load();
+        assert_eq!(store.all()["enablePersistingInGameSettings"], true);
+        fs::write(directory.path().join("settings.json"), br#"{"fps":120}"#).unwrap();
+        store = load();
+        assert_eq!(store.all()["enablePersistingInGameSettings"], true);
+        for enabled in [true, false, true] {
+            store
+                .set("enablePersistingInGameSettings", json!(enabled))
+                .unwrap();
+            store = load();
+            assert_eq!(store.all()["enablePersistingInGameSettings"], enabled);
+            store.set("fps", json!(120)).unwrap();
+            store = load();
+            assert_eq!(store.all()["enablePersistingInGameSettings"], enabled);
+        }
+        fs::create_dir(directory.path().join("settings.json.tmp")).unwrap();
+        assert!(
+            store
+                .set("enablePersistingInGameSettings", json!(false))
+                .is_err()
+        );
+        assert_eq!(store.all()["enablePersistingInGameSettings"], true);
+        assert_eq!(load().all()["enablePersistingInGameSettings"], true);
+        fs::remove_dir(directory.path().join("settings.json.tmp")).unwrap();
+        store
+            .set("enablePersistingInGameSettings", json!(false))
+            .unwrap();
+        store.reset().unwrap();
+        assert_eq!(load().all()["enablePersistingInGameSettings"], true);
     }
 
     #[test]
@@ -2068,6 +2165,32 @@ mod tests {
     }
 
     #[test]
+    fn fsr_upscaling_persists_without_changing_stream_or_metalfx_preferences() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = env::temp_dir().join(format!("opennow-fsr-upscaling-{unique}"));
+        let mut store = SettingsStore::load(Some(directory.clone())).unwrap();
+        let fps = store.all()["fps"].clone();
+        let resolution = store.all()["resolution"].clone();
+        store.set("upscalingDenoise", json!(7)).unwrap();
+        assert_eq!(
+            store.set("upscaling", json!("fsr1")).unwrap(),
+            json!("fsr1")
+        );
+        let mut store = SettingsStore::load(Some(directory.clone())).unwrap();
+        assert_eq!(store.all()["upscaling"], json!("fsr1"));
+        assert_eq!(store.all()["fps"], fps);
+        assert_eq!(store.all()["resolution"], resolution);
+        assert_eq!(store.all()["upscalingDenoise"], json!(7));
+        store.set("upscaling", json!("off")).unwrap();
+        let store = SettingsStore::load(Some(directory.clone())).unwrap();
+        assert_eq!(store.all()["upscaling"], json!("off"));
+        let _ = fs::remove_dir_all(directory);
+    }
+
+    #[test]
     fn upscaling_enhancement_defaults_bounds_and_persistence() {
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -2241,8 +2364,8 @@ mod tests {
         let directory = env::temp_dir().join(format!("opennow-controller-tuning-{unique}"));
         let mut store = SettingsStore::load(Some(directory.clone())).unwrap();
         for (key, default, maximum) in [
-            ("controllerLeftStickDeadzone", 24, 50),
-            ("controllerRightStickDeadzone", 27, 50),
+            ("controllerLeftStickDeadzone", 5, 50),
+            ("controllerRightStickDeadzone", 5, 50),
             ("controllerVibrationIntensity", 100, 100),
         ] {
             assert_eq!(store.all()[key], json!(default));
