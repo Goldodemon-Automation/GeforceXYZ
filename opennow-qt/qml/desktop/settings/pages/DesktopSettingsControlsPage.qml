@@ -112,6 +112,15 @@ Column {
                 onValueChangedByUser: value => controlsRoot.settingsScreen.setSetting("clipboardPaste", value)
             }
         }
+        DesktopSettingsChoice {
+            objectName: "keyboardLayoutChoice"
+            width: parent.width; glyph: "keyboard"
+            title: qsTr("Keyboard layout")
+            description: qsTr("Match your physical keyboard. Sent to GeForce NOW when a session starts, so restart the session after changing it.")
+            items: ShellStore.keyboardLayoutItems
+            value: controlsRoot.settingsScreen.valueSetting("keyboardLayout", "en-US")
+            onSelected: value => controlsRoot.settingsScreen.setChoice("keyboardLayout", value)
+        }
         DesktopSettingsRow { width: parent.width; paperStyle: true; glyph: "mouse"; title: qsTr("Mouse capture"); description: qsTr("Follows the remote cursor · F8 toggles capture")
             DesktopSettingsSegmented { options: [qsTr("Automatic")]; optionWidth: 112; selectedIndex: 0 }
         }
