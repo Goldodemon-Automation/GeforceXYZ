@@ -1,16 +1,35 @@
-MIT License
-
 Copyright (c) 2025 Zortos
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+NON-COMMERCIAL, NO-DERIVATIVE-DISTRIBUTION LICENSE
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Permission is granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software"), to use, copy,
+and modify the Software for personal, non-commercial purposes, subject to the
+following conditions:
+
+1. Commercial use is prohibited. The Software may not be used, in whole or in
+   part, for any commercial purpose, including selling, licensing, sublicensing,
+   offering as a paid service, or using it to provide a commercial product or
+   service.
+
+2. Distribution of modified versions is prohibited. No modified, adapted,
+   translated, or derivative version of the Software may be distributed,
+   published, sublicensed, sold, or otherwise made available to any third party.
+   Modifications may be used only privately and non-commercially by the person
+   who made them.
+
+3. Unmodified distribution is permitted only if the complete original Software
+   is distributed, this license is included, and the copyright notice is kept
+   intact. No fee may be charged for the Software itself or for access to it,
+   except for reasonable costs of physical media or transfer.
+
+4. The Software may not be incorporated into another work or product that is
+   distributed or made available to third parties without prior written
+   permission from the copyright holder.
+
+5. The name "Zortos" and the project's names, logos, and branding may not be
+   used to endorse or promote products or services without prior written
+   permission.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
