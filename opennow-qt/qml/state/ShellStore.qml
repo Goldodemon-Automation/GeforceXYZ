@@ -204,6 +204,7 @@ QtObject {
     property alias consoleSurfaceError: settingsOwner.consoleSurfaceError
     property bool desktopUiActive: false
     property alias subscription: accountServicesOwner.subscription
+    property alias subscriptionRefreshedMs: accountServicesOwner.subscriptionRefreshedMs
     property alias regions: accountServicesOwner.regions
     property alias regionPingResults: accountServicesOwner.regionPingResults
     property alias regionPingMessage: accountServicesOwner.regionPingMessage

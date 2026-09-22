@@ -12,7 +12,7 @@ Column {
     readonly property string resolution: String(settings.resolution || "1920x1080")
     readonly property bool wide: width >= DesktopTokens.px(1000)
     readonly property color mint: Theme.accentColor("green")
-    readonly property color panelColor: Theme.lightMode ? Theme.glass : "#C70B0F1A"
+    readonly property color panelColor: Theme.lightMode ? Theme.glass : "#C70D0D0D"
     spacing: DesktopTokens.px(24)
 
     component Copy: Text {
@@ -264,7 +264,7 @@ Column {
                 radius: DesktopTokens.px(16); border.color: Theme.seam
                 gradient: Gradient {
                     GradientStop { position: 0; color: Theme.lightMode ? Theme.glass : "#172B2D" }
-                    GradientStop { position: 0.7; color: Theme.lightMode ? Theme.shell : "#0B0F1A" }
+                    GradientStop { position: 0.7; color: Theme.lightMode ? Theme.shell : "#0D0D0D" }
                 }
                 Shape {
                     id: previewOutline

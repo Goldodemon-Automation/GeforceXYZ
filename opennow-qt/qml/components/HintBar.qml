@@ -8,15 +8,15 @@ GlassPanel {
         { glyph: "Y", label: qsTr("Search") },
         { glyph: "VIEW", label: qsTr("Details") }
     ]
-    implicitWidth: hintColumn.implicitWidth + 44
-    implicitHeight: 96
-    panelRadius: 32
+    implicitWidth: hintColumn.implicitWidth + 40
+    implicitHeight: 84
+    panelRadius: 18
     strong: true
 
     Column {
         id: hintColumn
         anchors.centerIn: parent
-        spacing: 8
+        spacing: 7
         Repeater {
             model: root.hints
             ControllerGlyph {

@@ -17,7 +17,25 @@ FocusScope {
     readonly property var acceptancePanels: ({stats:statsSettingsPage, audio:audioPage,
         interface:interfacePage, console:consolePage, shortcuts:shortcutsPage,
         controllers:controllersPage, subscription:subscriptionPage, recording:recordingPage})
-    readonly property bool compactNavigation: width < 1050
+    readonly property bool compactNavigation: false
+    // GeForce NOW-style settings layout: a plain topic list on the left, then
+    // one reading-width column of flat rows, centred as a pair in the window.
+    readonly property int navWidth: DesktopTokens.navWidth
+    readonly property int navGap: DesktopTokens.px(56)
+    readonly property int readingWidth: Math.min(DesktopTokens.readingWidth,
+        Math.max(DesktopTokens.px(320), root.width - root.navWidth - root.navGap - DesktopTokens.px(64)))
+    readonly property int groupWidth: root.navWidth + root.navGap + root.readingWidth
+    readonly property int groupX: Math.max(DesktopTokens.px(24), Math.round((root.width - root.groupWidth) / 2))
+    // Relative timestamps on this screen ("Updated 33 minutes ago") tick with
+    // the clock instead of freezing at page load.
+    property double nowMs: Date.now()
+    Timer {
+        interval: 30000
+        repeat: true
+        running: root.visible
+        triggeredOnStart: true
+        onTriggered: root.nowMs = Date.now()
+    }
     readonly property int selectedGroup: sections.findIndex(section => section.page ===
         ([0,1,2].indexOf(selectedSection) >= 0 ? 0 : selectedSection === 10 ? 5 : selectedSection === 7 ? 8 : selectedSection))
     onSelectedSectionChanged: { advancedOpen = false }
@@ -239,18 +257,18 @@ FocusScope {
         return null
     }
 
-    // Ping quality ramp mirrors Electron's region picker: green <30,
-    // lime <80, amber <150, red beyond. Unmeasured regions stay muted.
+    // Ping quality reads as gold intensity rather than a hue ramp: bright gold,
+    // gold, muted, then the single danger ink. Unmeasured regions stay muted.
     function pingRankColor(ms) {
         if (ms === null || ms === undefined)
             return Theme.textMuted
         if (ms < 30)
-            return "#58d98a"
+            return DesktopTokens.mint
         if (ms < 80)
-            return "#84cc16"
+            return DesktopTokens.gold
         if (ms < 150)
-            return "#eab308"
-        return "#ef4444"
+            return Theme.textMuted
+        return Theme.coral
     }
 
     function pingBarsLit(ms) {
@@ -265,14 +283,14 @@ FocusScope {
 
     function themeMeta(id) {
         const packs = {
-            aurora: { name: qsTr("Aurora"), blurb: qsTr("Cool teal shell with a mint focus ring."), accent: "#56E6A5" },
-            nocturne: { name: qsTr("Nocturne"), blurb: qsTr("Near-black nocturne shell with a sky focus ring."), accent: "#7FD4FF" },
-            kraft: { name: qsTr("Kraft"), blurb: qsTr("Warm brown shell with a brass focus ring."), accent: "#C6A46A" },
-            phosphor: { name: qsTr("Mint"), blurb: qsTr("Deep green shell with a phosphor focus ring."), accent: "#56E6A5" },
-            hibiscus: { name: qsTr("Sunset"), blurb: qsTr("Wine shell with a rose focus ring."), accent: "#FF8A80" },
-            chapel: { name: qsTr("Chapel"), blurb: qsTr("Violet night shell with a gold focus ring."), accent: "#FFD166" },
-            bone: { name: qsTr("Bone"), blurb: qsTr("Light paper shell for daytime use."), accent: "#C6A46A" },
-            cobalt: { name: qsTr("Cobalt"), blurb: qsTr("Light blue-white shell with a cobalt focus ring."), accent: "#7FD4FF" }
+            aurora: { name: qsTr("Graphite"), blurb: qsTr("Graphite black with the gold focus ring."), accent: "#FFD34D" },
+            nocturne: { name: qsTr("Obsidian"), blurb: qsTr("Pure black with the gold focus ring."), accent: "#FFD34D" },
+            kraft: { name: qsTr("Carbon"), blurb: qsTr("Carbon black with a brass focus ring."), accent: "#FFD34D" },
+            phosphor: { name: qsTr("Pure contrast"), blurb: qsTr("Maximum-contrast black and gold."), accent: "#FFD34D" },
+            hibiscus: { name: qsTr("Basalt"), blurb: qsTr("Soft black with the gold focus ring."), accent: "#FFD34D" },
+            chapel: { name: qsTr("Gilt"), blurb: qsTr("Gilded black with a warm gold focus ring."), accent: "#FFD34D" },
+            bone: { name: qsTr("Bone"), blurb: qsTr("Warm off-white shell for daytime use."), accent: "#8A6D1B" },
+            cobalt: { name: qsTr("Pearl"), blurb: qsTr("Cool off-white shell with the gold focus ring."), accent: "#8A6D1B" }
         }
         return packs[id] || { name: String(id || qsTr("Theme")), blurb: qsTr("Installed theme pack.") }
     }
@@ -366,34 +384,178 @@ FocusScope {
         return Qt.rgba(1, 1, 1, 0.08)
     }
 
-    function storeStatus(account) {
-        if (account.status === "expired")
-            return { text: qsTr("EXPIRED"), color: Theme.yellow, action: qsTr("Reconnect"), connected: false, primary: true }
-        if (account.status === "sync_error")
-            return { text: qsTr("SYNC ISSUE"), color: Theme.coral, action: qsTr("Resync"), connected: true }
-        if (account.isConnected || account.status === "connected")
-            return { text: qsTr("LINKED"), color: DesktopTokens.green, action: account.supportsSync ? qsTr("Resync") : qsTr("Unlink"), connected: true }
-        return { text: qsTr("NOT LINKED"), color: Theme.textMuted, action: qsTr("Link"), connected: false }
+    function storeTitle(account) {
+        const label = String(account.label || DesktopTokens.storeLabel(account.provider) || "")
+        const identity = String(account.displayName || account.userIdentifier || "")
+        return identity === "" ? label : label + " | " + identity
     }
 
-    function storeDescription(account) {
-        if (account.displayName)
-            return account.displayName
-        if (account.isConnected && account.syncedGames !== undefined && account.syncedGames !== null)
-            return qsTr("%1 cloud-ready games synced").arg(account.syncedGames)
-        if (account.isConnected)
-            return qsTr("Connected through your NVIDIA account")
-        return qsTr("Link this store on NVIDIA to add its games to your library")
+    // The reference client offers one action when a store is unlinked and two
+    // when it is linked and supports syncing.
+    function storeActions(account) {
+        if (account.isConnected === true || account.status === "connected" || account.status === "sync_error") {
+            return account.supportsSync === true
+                ? [{id: "resync", label: qsTr("Resync")}, {id: "disconnect", label: qsTr("Disconnect")}]
+                : [{id: "disconnect", label: qsTr("Disconnect")}]
+        }
+        return [{id: "connect", label: qsTr("Connect")}]
     }
 
-    function runStoreAction(account) {
-        const status = storeStatus(account)
-        if (status.action === qsTr("Resync"))
+    function runStoreAction(account, actionId) {
+        if (actionId === "resync")
             ShellStore.syncGameAccount(account.provider)
-        else if (status.connected)
+        else if (actionId === "disconnect")
             ShellStore.unlinkGameAccount(account.provider)
         else
             ShellStore.startAccountLink(account.provider)
+    }
+
+    // Capability lines: what syncs, whether sign-in is automatic, and how fresh
+    // the last sync is. Everything comes from the connection payload.
+    function storeBullets(account) {
+        const bullets = []
+        const connected = account.isConnected === true || account.status === "connected"
+        if (account.supportsSync === false) {
+            bullets.push({text: qsTr("Game library sync"), detail: qsTr("– Not supported"), supported: false})
+        } else if (connected && account.syncedGames !== undefined && account.syncedGames !== null) {
+            const updated = account.syncDate
+                ? DesktopTokens.relativeLastPlayed(String(account.syncDate), root.nowMs) : ""
+            bullets.push({text: qsTr("%1 games synced").arg(account.syncedGames),
+                detail: updated === "" ? "" : qsTr("– Updated %1").arg(updated), supported: true})
+        } else {
+            bullets.push({text: qsTr("Game library sync"),
+                detail: connected ? qsTr("– Ready on your next session") : qsTr("– Available after connecting"),
+                supported: connected})
+        }
+        bullets.push(account.supportsLinking === false
+            ? {text: qsTr("Automatic sign-in"), detail: qsTr("– Not supported"), supported: false}
+            : {text: qsTr("Automatic sign-in"), detail: "", supported: true})
+        if (account.status === "expired")
+            bullets.push({text: qsTr("Sign-in expired"), detail: qsTr("– Reconnect to keep syncing"), supported: false})
+        else if (account.status === "sync_error")
+            bullets.push({text: qsTr("Library sync issue"), detail: qsTr("– Resync to repair"), supported: false})
+        return bullets
+    }
+
+    function tierLabel() {
+        const sub = ShellStore.subscription
+        const user = ShellStore.authSession && ShellStore.authSession.user ? ShellStore.authSession.user : null
+        const tier = sub && sub.membershipTier ? sub.membershipTier : (user ? user.membershipTier : "")
+        return tier ? DesktopTokens.displayCase(tier) : ""
+    }
+
+    function membershipTitle() {
+        const tier = root.tierLabel()
+        if (tier === "")
+            return ShellStore.signedIn ? qsTr("Membership unavailable") : qsTr("Not signed in")
+        return qsTr("GeForce NOW %1 membership").arg(tier)
+    }
+
+    function formatDate(value) {
+        const ms = Date.parse(String(value || ""))
+        return isNaN(ms) ? "" : Qt.formatDate(new Date(ms), Qt.SystemLocaleLongDate)
+    }
+
+    function formatDateTime(value) {
+        const ms = Date.parse(String(value || ""))
+        if (isNaN(ms))
+            return ""
+        const date = new Date(ms)
+        return Qt.formatDate(date, Qt.SystemLocaleLongDate) + " " + Qt.formatTime(date, Qt.SystemLocaleShortTime)
+    }
+
+    function billingText() {
+        const sub = ShellStore.subscription
+        const date = sub ? root.formatDate(sub.currentSpanEndDateTime) : ""
+        if (date === "")
+            return ""
+        return sub.isUnlimited ? qsTr("Renews on %1").arg(date)
+                              : qsTr("Your next billing date is %1").arg(date)
+    }
+
+    function playtimeRemainingText() {
+        const sub = ShellStore.subscription
+        if (!sub)
+            return ""
+        if (sub.isUnlimited)
+            return qsTr("Unlimited")
+        if (sub.remainingHours === undefined || sub.remainingHours === null)
+            return ""
+        return qsTr("%1 Remaining").arg(DesktopTokens.durationLabel(sub.remainingHours))
+    }
+
+    function playtimeTotalText() {
+        const sub = ShellStore.subscription
+        if (!sub || sub.isUnlimited || sub.totalHours === undefined || sub.totalHours === null)
+            return ""
+        const total = qsTr("%1 Total").arg(DesktopTokens.durationLabel(sub.totalHours))
+        const rolled = Number(sub.rolledOverHours || 0)
+        return rolled > 0.001 ? total + " " + qsTr("(%1 rolled over)").arg(DesktopTokens.durationLabel(rolled)) : total
+    }
+
+    function playtimeFraction() {
+        const sub = ShellStore.subscription
+        if (!sub || sub.isUnlimited)
+            return 0
+        const total = Number(sub.totalHours || 0)
+        if (total <= 0)
+            return 0
+        return Math.max(0, Math.min(1, Number(sub.remainingHours || 0) / total))
+    }
+
+    function playtimeResetText() {
+        const sub = ShellStore.subscription
+        const when = sub ? root.formatDateTime(sub.currentSpanEndDateTime) : ""
+        return when === "" ? "" : qsTr("Resets on %1").arg(when)
+    }
+
+    function accountUpdatedText() {
+        if (!ShellStore.signedIn)
+            return qsTr("Sign in to load your account details")
+        const updated = DesktopTokens.relativeMs(ShellStore.subscriptionRefreshedMs, root.nowMs)
+        return updated === "" ? qsTr("Details have not loaded yet") : qsTr("Updated %1").arg(updated)
+    }
+
+    // The upgrade list is derived from the entitlements NVIDIA reports rather
+    // than a fixed marketing list, so it stays true for every membership.
+    function entitlementBullets() {
+        const sub = ShellStore.subscription
+        if (!sub)
+            return []
+        const bullets = []
+        const resolutions = sub.entitledResolutions || []
+        let bestWidth = 0
+        let bestHeight = 0
+        let bestFps = 0
+        for (let i = 0; i < resolutions.length; ++i) {
+            const width = Number(resolutions[i].width || 0)
+            const height = Number(resolutions[i].height || 0)
+            const fps = Number(resolutions[i].fps || 0)
+            if (width > bestWidth || (width === bestWidth && height > bestHeight)) {
+                bestWidth = width
+                bestHeight = height
+            }
+            if (fps > bestFps)
+                bestFps = fps
+        }
+        if (bestWidth > 0) {
+            const label = bestWidth >= 3840 ? "4K" : bestWidth >= 2560 ? "1440p"
+                : bestWidth >= 1920 ? "1080p" : bestHeight + "p"
+            bullets.push({text: qsTr("Stream at up to %1").arg(label), supported: true})
+        }
+        if (bestFps > 0)
+            bullets.push({text: qsTr("Stream at up to %1 FPS").arg(bestFps), supported: true})
+        if (sub.isUnlimited)
+            bullets.push({text: qsTr("Unlimited session playtime"), supported: true})
+        else if (sub.totalHours)
+            bullets.push({text: qsTr("Playtime included every billing period"), supported: true})
+        if (sub.storageAddon && sub.storageAddon.sizeGb)
+            bullets.push({text: qsTr("%1 GB of persistent storage").arg(sub.storageAddon.sizeGb), supported: true})
+        return bullets
+    }
+
+    function openMembershipPage() {
+        AppController.openExternalUrl("https://www.nvidia.com/en-us/geforce-now/memberships/")
     }
 
     function projectLinks() {
@@ -428,26 +590,40 @@ FocusScope {
 
     Column {
         id: settingsRail
-        x: DesktopTokens.px(24)
-        y: DesktopTokens.px(18)
-        width: root.compactNavigation ? root.width - x * 2 : DesktopTokens.px(272)
-        spacing: DesktopTokens.px(14)
+        x: root.groupX
+        y: DesktopTokens.px(26)
+        width: root.navWidth
+        spacing: DesktopTokens.px(10)
 
         TextField {
             id: settingsSearch
             objectName: "settingsSearch"
             width: parent.width
-            height: DesktopTokens.px(44)
+            height: DesktopTokens.px(34)
             placeholderText: qsTr("Search settings")
             text: root.searchQuery
             onTextEdited: root.searchQuery = text
             color: Theme.label
             placeholderTextColor: Theme.textMuted
             font.family: Theme.bodyFont
-            font.pixelSize: DesktopTokens.bodySize
-            leftPadding: 42
-            DesktopGlyph { x: 16; anchors.verticalCenter: parent.verticalCenter; width: 16; height: 16; icon: "desktop-search.svg" }
-            background: Rectangle { radius: 10; color: Theme.glass; border.width: 1; border.color: settingsSearch.activeFocus ? Theme.focus : Theme.seam }
+            font.pixelSize: DesktopTokens.px(13)
+            leftPadding: DesktopTokens.px(24)
+            rightPadding: DesktopTokens.px(8)
+            topPadding: 0
+            bottomPadding: 0
+            selectByMouse: true
+            // A hairline field, not a panel: the topic list stays the loudest
+            // thing in this column.
+            background: Rectangle {
+                color: "transparent"
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    height: 1
+                    color: settingsSearch.activeFocus ? Theme.focus : DesktopTokens.edgeInk
+                }
+            }
+            DesktopGlyph { x: 0; anchors.verticalCenter: parent.verticalCenter; width: 14; height: width; icon: "desktop-search.svg" }
             onAccepted: {
                 for (let i = 0; i < root.sections.length; ++i) {
                     if (root.matchesSection(root.sections[i])) {
@@ -459,47 +635,64 @@ FocusScope {
         }
         Flickable {
             width: parent.width
-            height: root.compactNavigation ? DesktopTokens.px(52) : Math.max(0, root.height - settingsRail.y - settingsSearch.height - 36)
-            contentWidth: root.compactNavigation ? navigation.implicitWidth : width
+            height: Math.max(DesktopTokens.px(120), root.height - settingsRail.y - settingsSearch.height - DesktopTokens.px(34))
+            contentWidth: width
             contentHeight: navigation.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
-            Flow {
+            Column {
                 id: navigation
-                width: root.compactNavigation ? implicitWidth : parent.width
-                flow: root.compactNavigation ? Flow.TopToBottom : Flow.LeftToRight
-                height: root.compactNavigation ? DesktopTokens.px(52) : implicitHeight
-                spacing: DesktopTokens.px(6)
+                width: parent.width
+                spacing: DesktopTokens.px(2)
                 Repeater {
                     model: root.sections
-                    delegate: Button {
+                    delegate: AbstractButton {
                         required property var modelData
                         required property int index
+                        readonly property bool selected: root.selectedGroup === index
                         visible: root.matchesSection(modelData)
-                        width: root.compactNavigation ? DesktopTokens.px(130) : settingsRail.width
-                        height: DesktopTokens.px(root.compactNavigation ? 48 : 64)
-                        padding: 12
+                        width: navigation.width
+                        height: DesktopTokens.navItemHeight
                         hoverEnabled: true
+                        Accessible.name: modelData.label
+                        Accessible.checked: selected
                         onClicked: root.selectedSection = modelData.page
                         background: Rectangle {
-                            radius: 16
-                            color: root.selectedGroup === index ? DesktopTokens.raisedStrong : parent.hovered ? DesktopTokens.raised : "transparent"
-                            border.width: parent.activeFocus ? 2 : 0
-                            border.color: Theme.focus
+                            radius: DesktopTokens.px(6)
+                            color: selected ? DesktopTokens.raisedStrong
+                                : parent.hovered || parent.activeFocus ? DesktopTokens.raised : "transparent"
+                            border.width: parent.activeFocus ? 1 : 0
+                            border.color: DesktopTokens.focus
                         }
-                        contentItem: RowLayout {
-                            spacing: 14
-                            Rectangle {
-                                visible: !root.compactNavigation
-                                Layout.preferredWidth: 40; Layout.preferredHeight: 40
-                                radius: 12; color: root.selectedGroup === index ? Theme.focus : DesktopTokens.raised
-                                DesktopSettingsIcon { anchors.centerIn: parent; width: 20; height: 20; glyph: modelData.icon; ink: root.selectedGroup === index ? Theme.focusText : Theme.label }
+                        contentItem: Item {
+                            DesktopSettingsIcon {
+                                x: DesktopTokens.px(12)
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: DesktopTokens.px(16)
+                                height: width
+                                glyph: modelData.icon
+                                ink: selected ? DesktopTokens.text : DesktopTokens.textBody
                             }
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
-                                Text { Layout.fillWidth: true; text: modelData.label; color: Theme.label; font.family: Theme.bodyFont; font.pixelSize: DesktopTokens.bodySize; font.weight: root.selectedGroup === index ? Font.ExtraBold : Font.Bold; elide: Text.ElideRight }
-                                Text { visible: !root.compactNavigation; Layout.fillWidth: true; text: modelData.detail; color: Theme.textMuted; font.family: Theme.bodyFont; font.pixelSize: DesktopTokens.captionSize; elide: Text.ElideRight }
+                            Text {
+                                id: navLabel
+                                x: DesktopTokens.px(40)
+                                width: Math.max(0, parent.width - x - DesktopTokens.px(10))
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.label
+                                elide: Text.ElideRight
+                                color: selected ? DesktopTokens.text : DesktopTokens.textBody
+                                font.family: DesktopTokens.bodyFont
+                                font.pixelSize: DesktopTokens.px(14)
+                                font.weight: selected ? Font.DemiBold : Font.Normal
+                            }
+                            Rectangle {
+                                visible: selected
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: DesktopTokens.accentBarWidth
+                                height: DesktopTokens.px(20)
+                                radius: width / 2
+                                color: DesktopTokens.focus
                             }
                         }
                     }
@@ -510,10 +703,10 @@ FocusScope {
 
     Item {
         id: contentLane
-        x: root.compactNavigation ? settingsRail.x : settingsRail.x + settingsRail.width + DesktopTokens.px(20)
-        y: root.compactNavigation ? settingsRail.y + settingsRail.height + DesktopTokens.px(16) : settingsRail.y
-        width: root.width - x - DesktopTokens.px(24)
-        height: root.height - y - DesktopTokens.px(18)
+        x: settingsRail.x + root.navWidth + root.navGap
+        y: DesktopTokens.px(26)
+        width: root.readingWidth
+        height: root.height - y - DesktopTokens.px(26)
         Flickable {
             id: contentFlick
             anchors.fill: parent

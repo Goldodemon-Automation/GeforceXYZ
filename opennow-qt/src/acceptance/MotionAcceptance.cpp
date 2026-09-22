@@ -146,19 +146,41 @@ void startSettingsMotionAcceptance(QQuickWindow *window, AppController *controll
     timer->start();
 }
 
+// The desktop chrome opens navigation as a drawer over the page: closed, it is
+// parked off-canvas and the page owns the full window; open, it slides in from
+// the same edge and settles flush with it. This runs the menu button through a
+// full close/open/close cycle and checks the drawer never covers or shifts the
+// page while it is closed.
 void startSidebarAcceptance(QQuickWindow *window, AppController *controller,
                             const bool *qmlWarningOccurred, bool fullscreen)
 {
-    if (!window) { QCoreApplication::exit(1); return; }
+    if (!window) { qCritical("Sidebar acceptance: no application window"); QCoreApplication::exit(1); return; }
     if (fullscreen) window->showFullScreen();
     auto *sidebar = findItem(window->contentItem(), QStringLiteral("desktopSidebar"));
-    auto *icon = findItem(window->contentItem(), QStringLiteral("sidebarIcon-home"));
+    auto *menu = findItem(window->contentItem(), QStringLiteral("desktopHeaderMenu"));
+    auto *host = findItem(window->contentItem(), QStringLiteral("desktopContentHost"));
+    auto *home = findItem(window->contentItem(), QStringLiteral("sidebarIcon-home"));
     auto *library = findItem(window->contentItem(), QStringLiteral("sidebarIcon-library"));
-    if (!sidebar || !icon || !library) { QCoreApplication::exit(1); return; }
-    sidebar->setProperty("collapsed", true);
-    sidebar->setProperty("hoverExpanded", false);
-    struct State { int tick = 0; QPointF origin, libraryOrigin; QSizeF librarySize; double width = 0; bool intermediate = false; };
+    if (!sidebar || !menu || !host || !home || !library) {
+        qCritical("Sidebar acceptance: fixture incomplete (drawer %d menu %d page %d home icon %d library icon %d)",
+                  sidebar != nullptr, menu != nullptr, host != nullptr,
+                  home != nullptr, library != nullptr);
+        QCoreApplication::exit(1);
+        return;
+    }
+    struct State {
+        int tick = 0;
+        int phase = 0;      // 0 settled closed, 1 opening or open, 2 closing, 3 finished
+        int clickedAt = 0;
+        double width = 0;
+        QSizeF librarySize;
+        bool intermediate = false;
+        bool openChecked = false;
+    };
     const auto state = std::make_shared<State>();
+    const auto reveal = [sidebar] { return sidebar->property("reveal").toDouble(); };
+    const auto closedAtRest = [sidebar] { return sidebar->x() <= -sidebar->width() + 0.5; };
+    const auto flushWithEdge = [sidebar] { return std::abs(sidebar->x()) <= 0.5; };
     auto *timer = new QTimer(window);
     timer->setInterval(20);
     QObject::connect(timer, &QTimer::timeout, window, [=] {
@@ -167,49 +189,79 @@ void startSidebarAcceptance(QQuickWindow *window, AppController *controller,
             qCritical("Sidebar acceptance: %s", message);
             timer->stop(); QCoreApplication::exit(1);
         };
+        const auto clickMenu = [menu, &fail] {
+            if (!QMetaObject::invokeMethod(menu, "clicked")) {
+                fail("navigation menu button did not respond");
+                return false;
+            }
+            return true;
+        };
         if (*qmlWarningOccurred) { fail("QML warning"); return; }
         if (tick == 15) {
-            state->origin = icon->mapToScene(QPointF{});
-            state->libraryOrigin = library->mapToScene(QPointF{});
-            state->librarySize = library->size();
             state->width = sidebar->width();
-            sidebar->setProperty("hoverExpanded", true);
+            state->librarySize = library->size();
+            // Navigation is chrome, not layout: the page spans the whole window
+            // whether the drawer is open or closed.
+            if (std::abs(host->x()) > 0.5 || std::abs(host->width() - window->width()) > 0.5) {
+                fail("page did not span the full window width"); return;
+            }
+            if (!menu->isVisible()) { fail("navigation menu button is hidden"); return; }
+            // A pinned-open preference is closed first so the cycle always
+            // starts from the parked state.
+            state->clickedAt = tick;
+            if (!closedAtRest() && !clickMenu()) return;
         }
         if (tick > 15) {
-            const auto delta = icon->mapToScene(QPointF{}) - state->origin;
-            if (std::abs(delta.x()) > 0.5 || std::abs(delta.y()) > 0.5) {
-                fail("compact and expanded navigation icons shifted"); return;
-            }
-            const auto libraryDelta = library->mapToScene(QPointF{}) - state->libraryOrigin;
-            if (std::abs(libraryDelta.x()) > 0.5 || std::abs(libraryDelta.y()) > 0.5
-                || library->size() != state->librarySize || !library->isVisible()) {
-                fail("library icon moved, resized or disappeared"); return;
-            }
-            for (auto *ancestor = library; ancestor != sidebar; ancestor = ancestor->parentItem()) {
-                if (!ancestor || ancestor->opacity() != 1) {
-                    fail("library icon faded during sidebar transition"); return;
-                }
-            }
+            const double progress = reveal();
+            if (progress > 0 && progress < 1) state->intermediate = true;
+            if (library->size() != state->librarySize) { fail("navigation icon resized"); return; }
             int libraryIcons = 0;
             const auto countLibraryIcons = [&](auto &&self, QQuickItem *item) -> void {
                 if (item->objectName() == QStringLiteral("sidebarIcon-library")) ++libraryIcons;
                 for (auto *child : item->childItems()) self(self, child);
             };
             countLibraryIcons(countLibraryIcons, sidebar);
-            if (libraryIcons != 1) { fail("sidebar duplicated the library icon"); return; }
-            const auto reveal = sidebar->property("reveal").toDouble();
-            if (reveal > 0 && reveal < 1) state->intermediate = true;
-        }
-        if (tick == 35) sidebar->setProperty("hoverExpanded", false);
-        if (tick == 55) sidebar->setProperty("collapsed", false);
-        if (tick == 58) sidebar->setProperty("collapsed", true);
-        if (tick == 80) {
-            if (std::abs(sidebar->width() - state->width) > 0.5
-                || (!controller->reducedMotion() && !state->intermediate)) {
-                fail("drawer did not animate and settle"); return;
+            if (libraryIcons != 1) { fail("drawer duplicated the library icon"); return; }
+            const bool settled = tick >= state->clickedAt + 4;
+            if (state->phase == 0 && settled && progress == 0 && closedAtRest()) {
+                if (home->mapToScene(QPointF{}).x() >= 0) {
+                    fail("closed drawer left navigation over the page"); return;
+                }
+                state->phase = 1;
+                state->clickedAt = tick;
+                if (!clickMenu()) return;
+            } else if (state->phase == 1 && settled && progress == 1 && flushWithEdge()) {
+                if (!state->openChecked) {
+                    if (!home->isVisible() || !library->isVisible()) {
+                        fail("open drawer hid its navigation"); return;
+                    }
+                    const auto homeOrigin = home->mapToScene(QPointF{});
+                    const auto libraryOrigin = library->mapToScene(QPointF{});
+                    if (homeOrigin.x() < 0 || libraryOrigin.x() < 0
+                        || libraryOrigin.x() + library->width() > state->width + 0.5
+                        || libraryOrigin.y() <= homeOrigin.y()) {
+                        fail("open drawer placed navigation outside its bounds"); return;
+                    }
+                    for (auto *ancestor = library; ancestor != sidebar; ancestor = ancestor->parentItem()) {
+                        if (!ancestor || ancestor->opacity() != 1) {
+                            fail("open drawer faded its navigation"); return;
+                        }
+                    }
+                    state->openChecked = true;
+                    state->phase = 2;
+                    state->clickedAt = tick;
+                    if (!clickMenu()) return;
+                }
+            } else if (state->phase == 2 && settled && progress == 0 && closedAtRest()) {
+                if (std::abs(sidebar->width() - state->width) > 0.5) { fail("drawer changed width"); return; }
+                if (!controller->reducedMotion() && !state->intermediate) {
+                    fail("drawer did not animate"); return;
+                }
+                state->phase = 3;
+                timer->stop(); QCoreApplication::exit(0);
             }
-            timer->stop(); QCoreApplication::exit(0);
         }
+        if (tick > 400) { fail("drawer never settled"); return; }
     });
     timer->start();
 }

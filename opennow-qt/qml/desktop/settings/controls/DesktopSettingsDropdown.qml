@@ -23,8 +23,8 @@ Item {
     readonly property int menuWidth: Math.max(DesktopTokens.px(320), Math.min(root.width - DesktopTokens.px(24), DesktopTokens.px(400)))
     readonly property int menuMaxHeight: DesktopTokens.px(640)
     readonly property int menuMargin: DesktopTokens.px(8)
-    readonly property int menuRadius: DesktopTokens.px(14)
-    readonly property int rowRadius: DesktopTokens.px(8)
+    readonly property int menuRadius: DesktopTokens.px(8)
+    readonly property int rowRadius: DesktopTokens.px(4)
 
     readonly property int menuContentHeight: {
         let height = 0
@@ -96,9 +96,9 @@ Item {
         width: root.menuWidth
         height: Math.min(Math.min(root.menuMaxHeight, root.height - DesktopTokens.px(24)), Math.max(DesktopTokens.px(48), root.menuContentHeight + root.menuMargin * 2))
         radius: root.menuRadius
-        color: Theme.shell
+        color: Theme.lightMode ? Theme.shell : DesktopTokens.drawer
         border.width: 1
-        border.color: Theme.seam
+        border.color: DesktopTokens.edgeInk
         enabled: root.opened
         opacity: reveal.progress
         scale: reveal.zoom

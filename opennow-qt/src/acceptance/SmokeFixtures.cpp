@@ -1,6 +1,7 @@
 #include "acceptance/AcceptanceSession.h"
 #include "app/AppController.h"
 
+#include <QDateTime>
 #include <QGuiApplication>
 #include <QJSValue>
 #include <QQmlApplicationEngine>
@@ -120,6 +121,83 @@ int AcceptanceSession::prepareWindow()
                     {u"https://west.example.invalid"_s,9},{u"https://central.example.invalid"_s,21},
                     {u"https://east.example.invalid"_s,94}});
             }
+        }
+        if (m_arguments.contains(u"--smoke-desktop-session"_s)) {
+            // Signed-in visual fixture for the desktop chrome. Every page reads
+            // live store state, so a screenshot of the shell needs a session, a
+            // subscription and catalog rows to render. The core stays stopped;
+            // nothing here touches a real account.
+            auto *store = m_engine.singletonInstance<QObject *>(u"OpenNOW"_s, u"ShellStore"_s);
+            if (!store) return EXIT_FAILURE;
+            const auto artwork = u"qrc:/qt/qml/OpenNOW/res/brand/desktop-renew.jpg"_s;
+            const auto game = [&artwork](const QString &id, const QString &title, const QString &provider,
+                                         const QString &badge) {
+                return QVariantMap{
+                    {u"id"_s, id}, {u"uuid"_s, id}, {u"title"_s, title},
+                    {u"imageUrl"_s, artwork}, {u"heroImageUrl"_s, artwork},
+                    {u"storeDiscount"_s, badge},
+                    {u"variants"_s, QVariantList{QVariantMap{
+                        {u"id"_s, id}, {u"store"_s, provider}, {u"inLibrary"_s, true}}}},
+                    {u"availableStores"_s, QStringList{provider}},
+                    {u"genres"_s, QStringList{u"ACTION"_s}}};
+            };
+            QVariantList library;
+            QVariantList featured;
+            QVariantList bestSellers;
+            const QStringList providers{u"STEAM"_s, u"EPIC"_s, u"XBOX"_s, u"UPLAY"_s, u"GOG"_s,
+                u"BATTLENET"_s, u"GAIJIN"_s, u"EA_APP"_s};
+            for (qsizetype i = 0; i < providers.size(); ++i) {
+                library.append(game(u"library-%1"_s.arg(i),
+                    u"Library fixture %1"_s.arg(i + 1), providers.at(i),
+                    i % 3 == 0 ? u"-70%"_s : QString{}));
+                featured.append(game(u"featured-%1"_s.arg(i),
+                    u"Featured fixture %1"_s.arg(i + 1), providers.at(providers.size() - 1 - i),
+                    i % 4 == 1 ? u"-34%"_s : QString{}));
+                bestSellers.append(game(u"seller-%1"_s.arg(i),
+                    u"Top seller fixture %1"_s.arg(i + 1), providers.at(i),
+                    i % 5 == 2 ? u"-50%"_s : QString{}));
+            }
+            store->setProperty("catalogGames", library);
+            store->setProperty("storePanels", QVariantList{
+                QVariantMap{{u"title"_s, u"Featured"_s}, {u"sections"_s, QVariantList{
+                    QVariantMap{{u"title"_s, u"New this week"_s}, {u"games"_s, featured}},
+                    QVariantMap{{u"title"_s, u"Top sellers"_s}, {u"games"_s, bestSellers}}}}}});
+            store->setProperty("authRestorePending", false);
+            store->setProperty("authSession", QVariantMap{
+                {u"user"_s, QVariantMap{
+                    {u"userId"_s, u"smoke-session"_s},
+                    {u"displayName"_s, u"Smoke Tester"_s},
+                    {u"email"_s, u"smoke.tester@example.invalid"_s},
+                    {u"membershipTier"_s, u"PERFORMANCE"_s}}}});
+            store->setProperty("subscription", QVariantMap{
+                {u"membershipTier"_s, u"PERFORMANCE"_s},
+                {u"isUnlimited"_s, false},
+                {u"remainingHours"_s, 99.83},
+                {u"totalHours"_s, 115.0},
+                {u"rolledOverHours"_s, 1.0},
+                {u"serverRegionId"_s, u"EU"_s},
+                {u"currentSpanEndDateTime"_s, u"2026-10-03T19:59:00Z"_s},
+                {u"entitledResolutions"_s, QVariantList{
+                    QVariantMap{{u"width"_s, 1920}, {u"height"_s, 1080}, {u"fps"_s, 60}},
+                    QVariantMap{{u"width"_s, 2560}, {u"height"_s, 1440}, {u"fps"_s, 120}}}}});
+            store->setProperty("subscriptionRefreshedMs",
+                double(QDateTime::currentMSecsSinceEpoch()) - 33.0 * 60.0 * 1000.0);
+            QVariantList accounts;
+            for (qsizetype i = 0; i < providers.size(); ++i) {
+                const bool connected = i < 4;
+                accounts.append(QVariantMap{
+                    {u"provider"_s, providers.at(i)},
+                    {u"displayName"_s, connected ? u"fixture.user"_s : QString{}},
+                    {u"isConnected"_s, connected},
+                    {u"supportsSync"_s, i % 3 != 2},
+                    {u"supportsLinking"_s, i % 4 != 3},
+                    {u"syncedGames"_s, connected ? 19 : 0},
+                    {u"syncDate"_s, connected ? u"2026-03-20T12:00:00Z"_s : QString{}},
+                    {u"status"_s, connected ? u"connected"_s
+                        : i == 4 ? u"expired"_s : u"disconnected"_s}});
+            }
+            store->setProperty("gameAccounts", accounts);
+            store->setProperty("gameAccountsState", u"ready"_s);
         }
         if (m_arguments.contains(u"--smoke-resolution-open"_s)
                 || m_arguments.contains(u"--smoke-resolution-fits-monitor"_s)) {

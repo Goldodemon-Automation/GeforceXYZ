@@ -5,8 +5,11 @@ paths were transcribed from the inline-style export; `desktop-renew.jpg` is the
 background artwork exported from that file. Store logos keep their existing
 brand artwork (see `opennow-qt/res/icons/STORE-ICON-SOURCES.md`).
 
-At 1440×900 the settings shell uses a 72px app rail, 60px header, 36px footer,
-272px settings navigation, 20px content gaps, 68px rows and 40px icon tiles.
+The desktop chrome is a cloud-gaming client layout: one 52px bar across the top
+holds the menu button, the page name, a centred search field and the account
+chip, and navigation opens as a 264px drawer over the page instead of reserving
+a rail. Pages own the full window at every size. Settings pairs a 200px topic
+list with a 760px reading column and one accent bar on the selected topic.
 Resolution expands inline into aspect-ratio groups of 118×52px tiles. It keeps
 the current selection, disables known unentitled sizes and filters against the
 current screen when **Fits monitor** is selected. Codec and color-depth pills
@@ -22,6 +25,11 @@ with `--smoke-width 1440 --smoke-height 900`, `--route settings-streaming`, and
 These flags do not start the core or persist account/settings changes.
 The Paper fixture also supplies seven sample store rows (linked, expired and
 unlinked) so real brand icons and action states can be checked without an account.
+Add `--smoke-desktop-session` to layer a signed-in session on top of them: a
+sample profile, subscription with playtime and billing date, store connections
+and catalog shelves, so the Home and Account pages can be captured with data
+flowing through the same bindings production uses. The screenshot runs stay
+core-free.
 
 Navigation uses static ink-colored SVG variants in light mode, with no additional
 shader layers. Settings pills scale their width together with their text; the
@@ -140,12 +148,13 @@ discarding choices after the seventh entry. Game titles allow two lines and
 expose the full title on hover. Unpriced games no longer show “Available”; real
 ownership, free-to-play and price information remains supported.
 
-The sidebar is opaque to prevent underlying page text showing through. Expanded
-labels stay hidden while its width animates, account labels reserve room for
-controls, and a pinned sidebar reserves page space (hover expansion remains an
-overlay). Use `--smoke-store-paging --smoke-store-appearance` with the desktop
-Store smoke route to inspect long names, all provider icons and an expanded
-sidebar. Add `--smoke-store-genres` for the genre menu.
+The navigation drawer is opaque to prevent underlying page text showing through
+and parks off-canvas when it is closed, so a closed drawer never dims, covers or
+shifts the page. The saved `desktopRailCollapsed` flag still means "closed", the
+menu button and Ctrl+B toggle it, Escape and the scrim close it, and the `reveal`
+property animates 0→1 with the slide. Use `--smoke-store-paging
+--smoke-store-appearance` with the desktop Store smoke route to inspect long
+names and all provider icons. Add `--smoke-store-genres` for the genre menu.
 
 Store retains its catalog in memory without a timer. Route re-entry reuses
 the current results; clearing a search restores one bounded browse snapshot,

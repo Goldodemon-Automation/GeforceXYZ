@@ -110,7 +110,7 @@ FocusScope {
     }
     Rectangle {
         anchors.fill: parent
-        color: "#B804060A"
+        color: "#B80D0D0D"
         opacity: reveal.progress
         TapHandler { onTapped: root.runAction(0) }
     }
@@ -134,9 +134,9 @@ FocusScope {
         width: Math.min(760, root.width - 32)
         height: Math.min(460, root.height - 32)
         radius: 20
-        color: Theme.lightMode ? Theme.shell : "#F00A0E15"
+        color: Theme.lightMode ? Theme.shell : "#F00D0D0D"
         border.width: 1
-        border.color: "#29FFFFFF"
+        border.color: Theme.seam
         opacity: reveal.progress
         scale: reveal.zoom
         transformOrigin: Item.Center
@@ -156,7 +156,7 @@ FocusScope {
                 artwork: String(root.game.imageUrl || root.game.heroImageUrl || "")
                 cornerRadius: 8
                 scrimStart: 1
-                fallbackColor: "#1A2030"
+                fallbackColor: "#1F1F1F"
             }
             Text {
                 x: 56
@@ -244,11 +244,11 @@ FocusScope {
                         width: actions.width
                         height: index === 0 ? 52 : 48
                         radius: 10
-                        color: modelData.primary ? "#F2FFFFFF"
-                            : modelData.danger && (actionHover.hovered || root.selectedIndex === index) ? "#29FF8A80"
-                            : (actionHover.hovered || root.selectedIndex === index) ? "#1FFFFFFF" : "#0FFFFFFF"
+                        color: modelData.primary ? Theme.focus
+                            : modelData.danger && (actionHover.hovered || root.selectedIndex === index) ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.16)
+                            : (actionHover.hovered || root.selectedIndex === index) ? DesktopTokens.raisedStrong : "transparent"
                         border.width: modelData.primary ? 0 : 1
-                        border.color: modelData.danger ? "#52FF8A80" : "#1FFFFFFF"
+                        border.color: modelData.danger ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.32) : Theme.seam
                         scale: actionTap.pressed && !AppController.reducedMotion ? 0.985 : 1
                         Behavior on color { ColorAnimation { duration: DesktopTokens.quickDuration } }
                         Behavior on scale { NumberAnimation { duration: DesktopTokens.quickDuration; easing.type: Easing.OutCubic } }
@@ -267,8 +267,8 @@ FocusScope {
                             width: 25
                             height: 25
                             radius: 7
-                            color: actionButton.modelData.primary ? "#160B0F1A"
-                                : actionButton.modelData.danger ? "#1FFF8A80" : "#12FFFFFF"
+                            color: actionButton.modelData.primary ? "#160D0D0D"
+                                : actionButton.modelData.danger ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.12) : DesktopTokens.raised
                             DesktopGlyph {
                                 anchors.centerIn: parent
                                 width: 16
@@ -281,8 +281,8 @@ FocusScope {
                             width: parent.width - 164
                             anchors.verticalCenter: parent.verticalCenter
                             text: actionButton.modelData.title
-                            color: actionButton.modelData.primary ? "#0B0F1A"
-                                : actionButton.modelData.danger ? (Theme.lightMode ? "#9F1239" : "#FFB4AE") : DesktopTokens.textHigh
+                            color: actionButton.modelData.primary ? "#0D0D0D"
+                                : actionButton.modelData.danger ? Theme.coral : DesktopTokens.textHigh
                             font.family: DesktopTokens.bodyFont
                             font.pixelSize: 12
                             font.weight: Font.Bold
@@ -296,8 +296,8 @@ FocusScope {
                             horizontalAlignment: Text.AlignRight
                             anchors.verticalCenter: parent.verticalCenter
                             text: actionButton.modelData.detail
-                            color: actionButton.modelData.primary ? "#990B0F1A"
-                                : actionButton.modelData.danger ? "#B3FFB4AE" : DesktopTokens.textFaint
+                            color: actionButton.modelData.primary ? "#990D0D0D"
+                                : actionButton.modelData.danger ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.70) : DesktopTokens.textFaint
                             font.family: DesktopTokens.monoFont
                             font.pixelSize: 8
                             font.weight: Font.Bold
@@ -309,7 +309,7 @@ FocusScope {
                             anchors.verticalCenter: parent.verticalCenter
                             shortcut: visible ? actionButton.modelData.detail : ""
                             keySize: 18
-                            ink: actionButton.modelData.primary ? "#0B0F1A" : DesktopTokens.textMuted
+                            ink: actionButton.modelData.primary ? "#0D0D0D" : DesktopTokens.textMuted
                         }
                         HoverHandler { id: actionHover; onHoveredChanged: if (hovered) root.selectedIndex = actionButton.index }
                         TapHandler { id: actionTap; onTapped: root.runAction(actionButton.index) }
@@ -335,9 +335,9 @@ FocusScope {
                         width: statusText.implicitWidth + 20
                         height: 20
                         radius: 10
-                        color: root.streamerStatus === "STREAMING" ? "#1756E6A5" : "#17FFFFFF"
+                        color: root.streamerStatus === "STREAMING" ? DesktopTokens.goldWash : DesktopTokens.raised
                         border.width: 1
-                        border.color: root.streamerStatus === "STREAMING" ? "#3856E6A5" : "#29FFFFFF"
+                        border.color: root.streamerStatus === "STREAMING" ? DesktopTokens.goldEdge : Theme.seam
                         Text {
                             id: statusText
                             anchors.centerIn: parent
@@ -391,9 +391,9 @@ FocusScope {
                     width: parent.width
                     height: 118
                     radius: 12
-                    color: root.selectedIndex === 5 ? "#1FFFFFFF" : "#0FFFFFFF"
+                    color: root.selectedIndex === 5 ? DesktopTokens.raisedStrong : "transparent"
                     border.width: root.selectedIndex === 5 ? 2 : 1
-                    border.color: root.selectedIndex === 5 ? DesktopTokens.focus : "#17FFFFFF"
+                    border.color: root.selectedIndex === 5 ? DesktopTokens.focus : Theme.seam
                     Text { x: 14; y: 13; text: qsTr("STREAM STATS OVERLAY"); color: DesktopTokens.textFaint; font.family: DesktopTokens.monoFont; font.pixelSize: 8; font.weight: Font.Bold; font.letterSpacing: 1 }
                     Text { x: 14; y: 39; text: qsTr("See frame rate, latency and bitrate\nwithout leaving the game."); color: DesktopTokens.textBody; font.family: DesktopTokens.bodyFont; font.pixelSize: 11; font.weight: Font.DemiBold; lineHeight: 1.25 }
                     KeyboardGlyph { x: 14; y: 83; shortcut: "F3"; keySize: 21; ink: DesktopTokens.textHigh }
@@ -409,9 +409,9 @@ FocusScope {
                     radius: 10
                     enabled: ShellStore.microphoneCanToggle
                     opacity: enabled ? 1 : 0.5
-                    color: root.selectedIndex === 6 ? "#1FFFFFFF" : "#0FFFFFFF"
+                    color: root.selectedIndex === 6 ? DesktopTokens.raisedStrong : "transparent"
                     border.width: root.selectedIndex === 6 ? 2 : 1
-                    border.color: root.selectedIndex === 6 ? DesktopTokens.focus : "#17FFFFFF"
+                    border.color: root.selectedIndex === 6 ? DesktopTokens.focus : Theme.seam
                     Accessible.role: Accessible.Button
                     Accessible.name: ShellStore.microphoneActionLabel
                     Accessible.description: ShellStore.microphoneDescription

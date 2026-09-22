@@ -100,7 +100,7 @@ FocusScope {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: row.value
-                    color: row.activeFocus ? "#990B0F1A" : DesktopTokens.textMuted
+                    color: row.activeFocus ? "#990D0D0D" : DesktopTokens.textMuted
                     font.family: DesktopTokens.bodyFont
                     font.pixelSize: 14
                     font.weight: Font.Bold
@@ -128,7 +128,7 @@ FocusScope {
                 width: parent.width
                 horizontalAlignment: Text.AlignRight
                 text: row.value
-                color: row.activeFocus ? "#990B0F1A" : DesktopTokens.textMuted
+                color: row.activeFocus ? "#990D0D0D" : DesktopTokens.textMuted
                 font.family: DesktopTokens.bodyFont
                 font.pixelSize: 14
                 font.weight: Font.Bold

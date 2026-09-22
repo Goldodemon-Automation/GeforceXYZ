@@ -25,7 +25,7 @@ ItemDelegate {
     background: RoundedArtwork {
         artwork: root.artwork
         fallbackColor: root.storeColor
-        cornerRadius: 25
+        cornerRadius: 18
         scrimStart: 0.55
     }
 
@@ -49,6 +49,6 @@ ItemDelegate {
         }
     }
 
-    FocusFrame { focused: root.highlighted; frameRadius: 28 }
+    FocusFrame { focused: root.highlighted; frameRadius: 20 }
     Behavior on scale { NumberAnimation { duration: Theme.focusDuration; easing.type: Easing.OutCubic } }
 }

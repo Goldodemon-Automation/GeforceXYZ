@@ -11,8 +11,10 @@ Rectangle {
     width: Math.min(680, parent.width - 48)
     height: copy.implicitHeight + 32
     radius: 12
-    color: "#F0222936"
-    border.color: "#BC9554"
+    // Neutral black card with a gold hairline. This component has no theme
+    // import, so the values stay literal.
+    color: "#F00D0D0D"
+    border.color: "#80FFD34D"
     border.width: 1
     Accessible.role: Accessible.AlertMessage
     Accessible.name: heading.text + ". " + detail.text
@@ -31,7 +33,7 @@ Rectangle {
             text: qsTr("Relative mouse input unavailable")
             font.pixelSize: 17
             font.weight: Font.DemiBold
-            color: "#FFE0A6"
+            color: "#FFD34D"
             wrapMode: Text.Wrap
         }
         Text {
@@ -39,7 +41,7 @@ Rectangle {
             width: parent.width
             text: root.message + "\n" + qsTr("Video and audio are still running.")
             font.pixelSize: 14
-            color: "#E3E7EF"
+            color: "#EDEDED"
             wrapMode: Text.Wrap
         }
     }

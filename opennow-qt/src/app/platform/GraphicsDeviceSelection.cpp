@@ -109,19 +109,31 @@ bool GraphicsDeviceSelection::savedDeviceUnavailable() const
     return !m_requestedDeviceId.isEmpty() && m_requestedDeviceId != m_active.id;
 }
 
-bool GraphicsDeviceSelection::applyTo(QQuickWindow *window) const
+GraphicsDeviceSelection::ApplyResult GraphicsDeviceSelection::applyTo(QQuickWindow *window) const
 {
-    if (!m_active.luid) return true;
+    if (!m_active.luid) return ApplyResult::NotRequired;
+    if (!window) return ApplyResult::NoWindow;
 #ifdef Q_OS_WIN
-    if (!window || window->isVisible() || window->isSceneGraphInitialized()) return false;
+    // The graphics device can only be chosen before the window is shown: once the scene graph
+    // has initialized, Qt has already created its device and the preference is no longer
+    // applicable. Keep running on Qt's device instead of refusing to start, because platforms
+    // such as the offscreen QPA expose the window during creation.
+    if (window->isVisible() || window->isSceneGraphInitialized()) {
+        qWarning("Cannot apply the selected graphics adapter %s: the scene graph is already"
+                 " initialized; continuing on Qt's current device",
+                 qUtf8Printable(m_active.name));
+        if (savedDeviceUnavailable())
+            qWarning("Saved graphics adapter is unavailable; using Automatic");
+        return ApplyResult::AlreadyInitialized;
+    }
     window->setGraphicsDevice(QQuickGraphicsDevice::fromAdapter(
         quint32(m_active.luid), std::bit_cast<qint32>(quint32(m_active.luid >> 32))));
     qInfo("Selected graphics adapter: %s (LUID %016llx)", qUtf8Printable(m_active.name),
           static_cast<unsigned long long>(m_active.luid));
     if (savedDeviceUnavailable()) qWarning("Saved graphics adapter is unavailable; using Automatic");
-    return true;
+    return ApplyResult::Applied;
 #else
-    Q_UNUSED(window);
-    return false;
+    // Adapter selection is Windows-only; other platforms let Qt choose.
+    return ApplyResult::NotRequired;
 #endif
 }

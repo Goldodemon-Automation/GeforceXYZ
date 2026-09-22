@@ -203,7 +203,7 @@ FocusScope {
         width: root.panelWidth
         height: root.panelHeight
         radius: 18
-        color: Theme.lightMode ? Theme.shell : "#FA0A0E15"
+        color: Theme.lightMode ? Theme.shell : "#FA0D0D0D"
         border.width: 1
         border.color: "#2EFFFFFF"
         TapHandler { }
@@ -399,7 +399,7 @@ FocusScope {
 
         Rectangle {
             x: 0; y: parent.height - 42; width: parent.width; height: 42
-            color: Theme.lightMode ? DesktopTokens.raised : "#8A04060A"
+            color: Theme.lightMode ? DesktopTokens.raised : "#8A0D0D0D"
             Rectangle { width: parent.width; height: 1; color: "#14FFFFFF" }
             Row {
                 x: 16; anchors.verticalCenter: parent.verticalCenter; spacing: 15

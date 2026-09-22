@@ -96,16 +96,14 @@ static int runApplicationSession(int argc, char *argv[], QString &restartExecuta
     registerStreamVideoItemQmlType();
     qSetMessagePattern(u"%{time yyyy-MM-ddTHH:mm:ss.zzz} %{type} %{category}: %{message}"_s);
     const QStringList bundledFonts = {
-        u":/qt/qml/OpenNOW/res/fonts/Nunito-Variable.ttf"_s,
-        u":/qt/qml/OpenNOW/res/fonts/IBMPlexMono-Regular.ttf"_s,
-        u":/qt/qml/OpenNOW/res/fonts/IBMPlexMono-Medium.ttf"_s,
-        u":/qt/qml/OpenNOW/res/fonts/IBMPlexMono-Bold.ttf"_s,
+        u":/qt/qml/OpenNOW/res/fonts/Outfit-Variable.ttf"_s,
+        u":/qt/qml/OpenNOW/res/fonts/Inter-Variable.ttf"_s,
     };
     for (const auto &fontPath : bundledFonts) {
         if (QFontDatabase::addApplicationFont(fontPath) == -1)
             qWarning("Could not load bundled font %s", qUtf8Printable(fontPath));
     }
-    QFont applicationFont(QStringLiteral("Nunito"));
+    QFont applicationFont(QStringLiteral("Inter"));
     applicationFont.setHintingPreference(QFont::PreferNoHinting);
     applicationFont.setStyleStrategy(QFont::PreferAntialias);
     application.setFont(applicationFont);
@@ -241,8 +239,8 @@ static int runApplicationSession(int argc, char *argv[], QString &restartExecuta
     engine.loadFromModule(u"OpenNOW"_s, u"Main"_s);
     auto *rootWindow = engine.rootObjects().isEmpty() ? nullptr
         : qobject_cast<QQuickWindow *>(engine.rootObjects().first());
-    if (!graphicsDevices.applyTo(rootWindow)) {
-        qCritical("Could not select the graphics adapter before scene-graph initialization");
+    if (graphicsDevices.applyTo(rootWindow) == GraphicsDeviceSelection::ApplyResult::NoWindow) {
+        qCritical("Could not select the graphics adapter: the application window is unavailable");
         return EXIT_FAILURE;
     }
     hdrOutput.attach(rootWindow);

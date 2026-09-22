@@ -13,8 +13,15 @@ Item {
     property bool freeToPlay: false
     property color fallbackColor: Theme.cartSteam
     property int tileWidth: DesktopTokens.libraryArtWidth
-    property int tileHeight: artHeight + DesktopTokens.storeCardInfoHeight
-    readonly property int artHeight: Math.round(tileWidth * 198 / 132)
+    // Poster rows carry a caption and metadata under the art; shelf tiles are
+    // artwork only. artAspect is height / width.
+    property bool showInfo: true
+    property real artAspect: 198 / 132
+    property string badge: ""
+    property bool badgeAccent: true
+    property int tileHeight: artHeight + (showInfo ? DesktopTokens.storeCardInfoHeight : 0)
+    readonly property int artHeight: Math.round(tileWidth * artAspect)
+    readonly property int artRadius: root.showInfo ? DesktopTokens.px(12) : DesktopTokens.tileRadius
 
     signal activated(var game)
     signal pointed()
@@ -40,10 +47,31 @@ Item {
         y: 0
         width: root.tileWidth
         height: root.artHeight
-        cornerRadius: DesktopTokens.px(12)
+        cornerRadius: root.artRadius
         scrimStart: 1
         artwork: DesktopTokens.artworkUrl(root.game, false)
         fallbackColor: root.fallbackColor
+    }
+
+    // Promotion badge in the artwork's top-left corner ("-70%", "New on GFN").
+    Rectangle {
+        id: badgePill
+        visible: root.badge !== "" && !root.owned
+        x: 0
+        y: 0
+        width: badgeLabel.implicitWidth + DesktopTokens.px(14)
+        height: DesktopTokens.px(20)
+        radius: DesktopTokens.px(4)
+        color: root.badgeAccent ? DesktopTokens.focus : Qt.rgba(0, 0, 0, 0.78)
+        Text {
+            id: badgeLabel
+            anchors.centerIn: parent
+            text: root.badge
+            color: root.badgeAccent ? Theme.focusText : DesktopTokens.text
+            font.family: DesktopTokens.bodyFont
+            font.pixelSize: DesktopTokens.px(11.5)
+            font.weight: Font.DemiBold
+        }
     }
 
     Rectangle {
@@ -51,7 +79,7 @@ Item {
         y: -DesktopTokens.cardOutlinePad
         width: root.tileWidth + DesktopTokens.cardOutlinePad * 2
         height: root.artHeight + DesktopTokens.cardOutlinePad * 2
-        radius: DesktopTokens.px(14)
+        radius: root.artRadius + DesktopTokens.cardOutlinePad
         color: "transparent"
         border.width: root.selected ? 2 : 1
         border.color: root.selected ? DesktopTokens.focus : DesktopTokens.cardOutlineIdle
@@ -64,6 +92,7 @@ Item {
     Text {
         id: cardTitle
         objectName: "storeCardTitle"
+        visible: root.showInfo
         x: 0
         y: root.artHeight + DesktopTokens.px(8)
         width: root.tileWidth
@@ -83,7 +112,7 @@ Item {
         objectName: "storeCardMetadata"
         x: 0
         y: cardTitle.y + cardTitle.height + DesktopTokens.px(4)
-        visible: root.owned || root.freeToPlay || root.price !== "" || root.discount !== ""
+        visible: root.showInfo && (root.owned || root.freeToPlay || root.price !== "" || root.discount !== "")
         width: root.tileWidth
         height: DesktopTokens.px(17)
         spacing: DesktopTokens.px(7)

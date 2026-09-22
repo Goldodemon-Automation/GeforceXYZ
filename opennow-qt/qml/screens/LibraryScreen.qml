@@ -125,7 +125,7 @@ FocusScope {
         event.accepted = true
     }
 
-    ScreenBackground { tint: "#354016" }
+    ScreenBackground { tint: "#262626" }
 
     GlassPanel {
         x: 120; y: 108

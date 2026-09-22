@@ -206,7 +206,7 @@ FocusScope {
                                 anchors.margins: 10
                                 height: 22
                                 spacing: 6
-                                Rectangle { width: 18; height: 18; radius: 9; color: modelData.accent; Text { anchors.centerIn: parent; text: qsTr("Z"); color: "#0B0F1A"; font.pixelSize: 8; font.weight: Font.Black } }
+                                Rectangle { width: 18; height: 18; radius: 9; color: modelData.accent; Text { anchors.centerIn: parent; text: qsTr("Z"); color: "#0D0D0D"; font.pixelSize: 8; font.weight: Font.Black } }
                                 Rectangle { width: Math.max(54, preview.width - 150); height: 18; radius: 9; color: Qt.rgba(1, 1, 1, 0.14) }
                                 Rectangle { width: 62; height: 18; radius: 9; color: Qt.rgba(1, 1, 1, 0.18) }
                             }

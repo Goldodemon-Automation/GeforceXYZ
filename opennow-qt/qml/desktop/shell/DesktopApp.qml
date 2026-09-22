@@ -35,7 +35,7 @@ FocusScope {
         if (value === "store") return qsTr("Store")
         if (value === "friends") return qsTr("Friends")
         if (value.indexOf("settings") === 0 || value === "controllers") return qsTr("Settings")
-        return qsTr("Home")
+        return qsTr("Games")
     }
     function subtitleForRoute(value) {
         if (value === "updates") return ""
@@ -200,7 +200,7 @@ FocusScope {
         width: Math.min(640, errorText.implicitWidth + 40)
         height: 48
         radius: 12
-        color: "#F02B1D24"
+        color: "#F01A1A1A"
         border.width: 1
         border.color: DesktopTokens.danger
         visible: root.modeErrorVisible
@@ -210,7 +210,7 @@ FocusScope {
             anchors.centerIn: parent
             width: parent.width - 28
             text: ShellStore.consoleSurfaceError
-            color: "#FFFFDAD6"
+            color: "#FFF2F2F2"
             font.family: DesktopTokens.bodyFont
             font.pixelSize: 12
             font.weight: Font.Bold

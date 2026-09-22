@@ -11,8 +11,10 @@ Rectangle {
     height: badgeSize
     radius: badgeSize === 30 ? 9 : 8
     color: storeColor
-    border.color: Qt.rgba(1, 1, 1, 0.85)
-    border.width: 2
+    // Store marks are monochrome chips with a hairline edge; the glyph, not a
+    // brand colour, distinguishes them.
+    border.color: Qt.rgba(1, 1, 1, 0.55)
+    border.width: 1
 
     function storeIcon() {
         const key = root.storeGlyph.toUpperCase()

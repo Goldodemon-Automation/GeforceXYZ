@@ -16,7 +16,7 @@ AbstractButton {
 
     background: Rectangle {
         radius: DesktopTokens.px(16)
-        color: Theme.lightMode ? Theme.glass : "#C70B0F1A"
+        color: Theme.lightMode ? Theme.glass : "#C70D0D0D"
         border.width: root.selected || root.activeFocus ? 2 : 1
         border.color: root.activeFocus ? Theme.focus : root.selected ? root.accent : Theme.seam
         Behavior on border.color { ColorAnimation { duration: DesktopTokens.quickDuration } }
@@ -43,7 +43,7 @@ AbstractButton {
             width: badge.implicitWidth + DesktopTokens.px(20)
             height: DesktopTokens.px(26)
             radius: height / 2
-            color: "#DB0B0F1A"; border.color: "#24FFFFFF"
+            color: "#DB0D0D0D"; border.color: Theme.seam
             Text {
                 id: badge
                 anchors.centerIn: parent
@@ -60,12 +60,12 @@ AbstractButton {
             anchors.margins: DesktopTokens.px(12)
             width: defaultLabel.implicitWidth + DesktopTokens.px(20)
             height: DesktopTokens.px(26); radius: height / 2
-            color: "#6EE7B7"; border.color: "#596EE7B7"
+            color: Theme.focus; border.color: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.35)
             Text {
                 id: defaultLabel
                 anchors.centerIn: parent
                 text: qsTr("DEFAULT · DESKTOP MODE")
-                color: "#0B0F1A"; font.family: Theme.monoFont
+                color: "#0D0D0D"; font.family: Theme.monoFont
                 font.pixelSize: DesktopTokens.px(10); font.weight: Font.Bold
             }
         }

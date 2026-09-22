@@ -113,7 +113,7 @@ For visual evidence, run the built app with `--smoke-test --allow-multiple-insta
 --desktop --route library --smoke-collections --reduced-motion --screenshot
 /absolute/path/collections.png`. The collections in this screenshot are test-created;
 new installations start with no collections. For a manual restart check, create a
-collection using **New collection** or the sidebar **+**, add/remove games through
+collection using **New collection** or the navigation drawer **+**, add/remove games through
 **Add to collection** in a game's context menu, restart, then rename and delete the
 folder. Membership and names must survive restart, and deleting a folder must not
 remove games from the library.

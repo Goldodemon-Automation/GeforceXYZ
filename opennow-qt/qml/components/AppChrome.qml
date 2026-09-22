@@ -58,21 +58,22 @@ Item {
     GlassPanel {
         id: profilePanel
         x: 40; y: 28
-        width: Math.max(273, Math.min(430, profileRow.implicitWidth + 28)); height: 56
-        panelRadius: 28
+        width: Math.max(273, Math.min(430, profileRow.implicitWidth + 28)); height: 52
+        panelRadius: 16
         strong: true
         Row {
             id: profileRow
             anchors.centerIn: parent
             spacing: 12
             Rectangle {
-                width: 40; height: 40; radius: 20
-                color: Theme.violet
-                border.color: Theme.face; border.width: 2
+                width: 38; height: 38; radius: 19
+                // The signed-in disc is the one gold surface in the chrome.
+                color: Theme.focus
+                border.color: Qt.rgba(1, 1, 1, 0.22); border.width: 1
                 Text {
                     anchors.centerIn: parent
                     text: root.profileInitial
-                    color: Theme.contrastText(Theme.violet)
+                    color: Theme.focusText
                     font.family: Theme.displayFont
                     font.pixelSize: 16
                     font.weight: Font.Black
@@ -92,7 +93,7 @@ Item {
             Row {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 6
-                Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 8; height: 8; radius: 4; color: ShellStore.signedIn ? Theme.mint : Theme.textMuted }
+                Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 8; height: 8; radius: 4; color: ShellStore.signedIn ? Theme.focus : Theme.textMuted }
                 Text {
                     text: ShellStore.signedIn ? qsTr("Connected") : qsTr("Offline")
                     color: Theme.label
@@ -113,8 +114,8 @@ Item {
         x: Math.round((profilePanel.x + profilePanel.width + statusPanel.x - width) / 2)
         y: 28
         width: Math.max(156, titleText.implicitWidth + 98)
-        height: 56
-        panelRadius: 28
+        height: 52
+        panelRadius: 16
         strong: true
         Text {
             id: titleText
@@ -134,8 +135,8 @@ Item {
         id: statusPanel
         objectName: "consoleStatusPanel"
         x: parent.width - width - 40; y: 28
-        width: Math.max(446, statusRow.implicitWidth + 40); height: 56
-        panelRadius: 28
+        width: Math.max(446, statusRow.implicitWidth + 40); height: 52
+        panelRadius: 16
         strong: true
         Row {
             id: statusRow
@@ -147,7 +148,7 @@ Item {
             }
             Row {
                 spacing: 6; anchors.verticalCenter: parent.verticalCenter
-                Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 8; height: 8; radius: 4; color: Theme.mint }
+                Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 8; height: 8; radius: 4; color: Theme.focus }
                 Text {
                     text: root.regionStatus()
                     color: Theme.label; font.family: Theme.bodyFont; font.pixelSize: 16; font.weight: Font.Bold

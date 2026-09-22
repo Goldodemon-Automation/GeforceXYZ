@@ -20,7 +20,7 @@ FocusScope {
     property bool started: false
     property bool completed: false
 
-    Rectangle { anchors.fill: parent; color: "#05070D" }
+    Rectangle { anchors.fill: parent; color: "#0D0D0D" }
     VideoOutput {
         id: output
         anchors.fill: parent

@@ -42,8 +42,8 @@ Column {
         width: Math.min(root.width, recordingText.implicitWidth + 48)
         height: 36
         radius: 18
-        color: "#E610141C"
-        border.color: "#805F2932"
+        color: "#E60D0D0D"
+        border.color: "#80FFD34D"
         border.width: 1
         Accessible.role: Accessible.StaticText
         Accessible.name: recordingText.text
@@ -51,14 +51,14 @@ Column {
         Rectangle {
             x: 14; anchors.verticalCenter: parent.verticalCenter
             width: 8; height: 8; radius: 4
-            color: "#FF6573"
+            color: Theme.coral
         }
         Text {
             id: recordingText
             x: 30; anchors.verticalCenter: parent.verticalCenter
             width: parent.width - 44
             text: qsTr("Recording · %1").arg(root.elapsedText)
-            color: "#FFE5E8"
+            color: "#FFFFFF"
             font.family: Theme.monoFont
             font.pixelSize: 13
             font.weight: Font.DemiBold
@@ -73,8 +73,8 @@ Column {
         width: Math.min(root.width, noticeText.implicitWidth + 32)
         height: noticeText.implicitHeight + 24
         radius: 12
-        color: "#F010141C"
-        border.color: "#38FFFFFF"
+        color: "#F00D0D0D"
+        border.color: "#38C9A227"
         border.width: 1
         Accessible.role: Accessible.StaticText
         Accessible.name: root.notice
@@ -84,7 +84,7 @@ Column {
             x: 16; y: 12
             width: parent.width - 32
             text: root.notice
-            color: "#F0F3FA"
+            color: "#FFFFFF"
             font.family: Theme.bodyFont
             font.pixelSize: 14
             font.weight: Font.DemiBold

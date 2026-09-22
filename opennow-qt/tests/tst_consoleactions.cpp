@@ -38,7 +38,8 @@ public slots:
             qmlRegisterType(QUrl::fromLocalFile(source + "/screens/" + name + ".qml"),
                             "OpenNOW", 1, 0, name);
         }
-        QFontDatabase::addApplicationFont(QStringLiteral(":/qt/qml/OpenNOW/res/fonts/Nunito-Variable.ttf"));
+        QFontDatabase::addApplicationFont(QStringLiteral(":/qt/qml/OpenNOW/res/fonts/Outfit-Variable.ttf"));
+        QFontDatabase::addApplicationFont(QStringLiteral(":/qt/qml/OpenNOW/res/fonts/Inter-Variable.ttf"));
         m_app.setReducedMotion(true);
     }
 

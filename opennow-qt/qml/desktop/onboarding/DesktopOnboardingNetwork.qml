@@ -15,7 +15,7 @@ Rectangle {
     visible: controller.state !== MacAwdlController.Unsupported
     implicitHeight: content.implicitHeight + DesktopTokens.px(40)
     radius: DesktopTokens.px(16)
-    color: Theme.lightMode ? Theme.glass : "#C70B0F1A"
+    color: Theme.lightMode ? Theme.glass : "#C70D0D0D"
     border.color: Qt.rgba(accent.r, accent.g, accent.b, 0.35)
 
     function refreshIfVisible() {

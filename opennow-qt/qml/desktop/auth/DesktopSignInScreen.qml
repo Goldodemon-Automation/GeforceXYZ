@@ -23,7 +23,8 @@ FocusScope {
     readonly property color mutedInk: Theme.lightMode ? Theme.textMuted : "#8AFFFFFF"
     readonly property color faintInk: Theme.lightMode ? Theme.textMuted : "#6BFFFFFF"
     readonly property color bodyInk: Theme.lightMode ? Theme.textMuted : "#A3FFFFFF"
-    readonly property color mint: "#6EE7B7"
+    // The secure/primary accent is the palette gold.
+    readonly property color mint: Theme.focus
     readonly property color cardSeam: Theme.lightMode ? Theme.seam : "#24FFFFFF"
     readonly property bool hasExpiry: challenge !== null && Number.isFinite(Number(challenge.expiresAt))
     readonly property int secondsLeft: hasExpiry ? Math.max(0, Math.ceil((Number(challenge.expiresAt) - clockMs) / 1000)) : 0
@@ -97,8 +98,8 @@ FocusScope {
                 anchors.centerIn: parent
                 spacing: DesktopTokens.px(10)
                 DesktopGlyph { visible: action.glyph !== ""; anchors.verticalCenter: parent.verticalCenter; width: action.glyphSize; height: action.glyphSize; icon: action.glyph }
-                BodyText { anchors.verticalCenter: parent.verticalCenter; text: action.text; color: action.primary ? "#0B0F1A" : action.quiet ? root.bodyInk : DesktopTokens.text; font: action.font }
-                BodyText { visible: action.external; anchors.verticalCenter: parent.verticalCenter; text: "↗"; color: action.primary ? "#0B0F1A" : DesktopTokens.text; font: action.font }
+                BodyText { anchors.verticalCenter: parent.verticalCenter; text: action.text; color: action.primary ? "#0D0D0D" : action.quiet ? root.bodyInk : DesktopTokens.text; font: action.font }
+                BodyText { visible: action.external; anchors.verticalCenter: parent.verticalCenter; text: "↗"; color: action.primary ? "#0D0D0D" : DesktopTokens.text; font: action.font }
             }
         }
         background: Rectangle {
@@ -111,7 +112,7 @@ FocusScope {
             layer.enabled: action.primary
             layer.effect: MultiEffect {
                 shadowEnabled: true
-                shadowColor: "#2E6EE7B7"
+                shadowColor: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.28)
                 shadowBlur: 0.6
                 shadowVerticalOffset: DesktopTokens.px(8)
                 shadowHorizontalOffset: 0
@@ -203,7 +204,7 @@ FocusScope {
                     width: betaLabel.implicitWidth + DesktopTokens.px(14)
                     height: DesktopTokens.px(24)
                     radius: DesktopTokens.px(6)
-                    color: "#1FFFD166"
+                    color: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.12)
                     MonoText { id: betaLabel; anchors.centerIn: parent; text: qsTr("BETA"); color: Theme.accentColor("amber") }
                 }
             }
@@ -257,13 +258,13 @@ FocusScope {
                     width: DesktopTokens.px(72)
                     height: DesktopTokens.px(72)
                     radius: DesktopTokens.px(20)
-                    color: Theme.lightMode ? Theme.shell : "#0B0F1A"
+                    color: Theme.lightMode ? Theme.shell : "#0D0D0D"
                     border.width: 1
                     border.color: root.cardSeam
                     layer.enabled: true
                     layer.effect: MultiEffect {
                         shadowEnabled: true
-                        shadowColor: "#186EE7B7"
+                        shadowColor: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.14)
                         shadowBlur: 1
                         shadowVerticalOffset: 0
                         shadowHorizontalOffset: 0
@@ -336,7 +337,7 @@ FocusScope {
                 width: Math.min(DesktopTokens.px(440), parent.width)
                 height: cardColumn.implicitHeight + 2
                 radius: DesktopTokens.px(22)
-                color: Theme.lightMode ? Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.92) : "#D10B0F1A"
+                color: Theme.lightMode ? Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.92) : "#D10D0D0D"
                 border.width: 1
                 border.color: root.cardSeam
                 layer.enabled: true
@@ -422,8 +423,8 @@ FocusScope {
                                     width: DesktopTokens.px(32)
                                     height: width
                                     radius: DesktopTokens.px(9)
-                                    color: "#76B900"
-                                    BodyText { anchors.centerIn: parent; text: "N"; color: "#0B0F1A"; font.pixelSize: DesktopTokens.px(14); font.weight: Font.Black }
+                                    color: Theme.focus
+                                    BodyText { anchors.centerIn: parent; text: "N"; color: "#0D0D0D"; font.pixelSize: DesktopTokens.px(14); font.weight: Font.Black }
                                 }
                                 Column {
                                     x: DesktopTokens.px(58)
@@ -465,9 +466,9 @@ FocusScope {
                             height: persistWarning.height + DesktopTokens.px(20)
                             visible: ShellStore.sessionPersistenceMessage !== ""
                             radius: DesktopTokens.px(10)
-                            color: "#14FF8A80"
+                            color: Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.08)
                             border.width: 1
-                            border.color: "#28FF8A80"
+                            border.color: Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.16)
                             BodyText { id: persistWarning; x: DesktopTokens.px(10); y: DesktopTokens.px(10); width: parent.width - DesktopTokens.px(20); text: ShellStore.sessionPersistenceMessage; font.pixelSize: DesktopTokens.px(11); lineHeight: DesktopTokens.px(16) }
                         }
                     }
@@ -508,7 +509,7 @@ FocusScope {
                                 color: root.staySignedIn ? root.mint : DesktopTokens.raisedStrong
                                 border.width: persistenceButton.activeFocus ? 2 : 0
                                 border.color: DesktopTokens.focus
-                                Rectangle { x: root.staySignedIn ? parent.width - width - DesktopTokens.px(3) : DesktopTokens.px(3); y: DesktopTokens.px(3); width: DesktopTokens.px(20); height: width; radius: width / 2; color: root.staySignedIn ? "#0B0F1A" : DesktopTokens.text }
+                                Rectangle { x: root.staySignedIn ? parent.width - width - DesktopTokens.px(3) : DesktopTokens.px(3); y: DesktopTokens.px(3); width: DesktopTokens.px(20); height: width; radius: width / 2; color: root.staySignedIn ? "#0D0D0D" : DesktopTokens.text }
                             }
                         }
                         onClicked: root.staySignedIn = !root.staySignedIn
@@ -602,11 +603,11 @@ FocusScope {
                                             required property int index
                                             width: qrGrid.cell
                                             height: qrGrid.cell
-                                            color: qrGrid.qrRows[Math.floor(index / qrGrid.columns)].charAt(index % qrGrid.columns) === "1" ? "#0B0F1A" : "#FFFFFF"
+                                            color: qrGrid.qrRows[Math.floor(index / qrGrid.columns)].charAt(index % qrGrid.columns) === "1" ? "#0D0D0D" : "#FFFFFF"
                                         }
                                     }
                                 }
-                                MonoText { anchors.centerIn: parent; visible: !qrGrid.visible; text: "QR"; color: "#0B0F1A"; font.pixelSize: DesktopTokens.px(30); lineHeight: DesktopTokens.px(36) }
+                                MonoText { anchors.centerIn: parent; visible: !qrGrid.visible; text: "QR"; color: "#0D0D0D"; font.pixelSize: DesktopTokens.px(30); lineHeight: DesktopTokens.px(36) }
                             }
                             Column {
                                 id: codeText
@@ -697,9 +698,9 @@ FocusScope {
                             width: parent.width
                             height: failureText.height + DesktopTokens.px(32)
                             radius: DesktopTokens.px(12)
-                            color: "#08FF8A80"
+                            color: Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.03)
                             border.width: 1
-                            border.color: "#24FF8A80"
+                            border.color: Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.14)
                             Rectangle { x: DesktopTokens.px(14); y: DesktopTokens.px(20); width: DesktopTokens.px(3); height: parent.height - DesktopTokens.px(40); radius: DesktopTokens.px(2); color: DesktopTokens.danger }
                             BodyText { id: failureText; x: DesktopTokens.px(29); y: DesktopTokens.px(16); width: parent.width - DesktopTokens.px(45); text: qsTr("The authorization was cancelled or expired. Your previous account state is unchanged."); font.pixelSize: DesktopTokens.px(11); lineHeight: DesktopTokens.px(16) }
                         }
@@ -742,7 +743,7 @@ FocusScope {
                     enabled: root.providerOpen && !root.waiting && !root.failed
                     z: 20
                     radius: DesktopTokens.px(12)
-                    color: Theme.lightMode ? Theme.shell : "#FA111722"
+                    color: Theme.lightMode ? Theme.shell : "#FA121212"
                     border.width: 1
                     border.color: root.cardSeam
                     ListView {

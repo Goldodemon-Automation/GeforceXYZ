@@ -83,7 +83,8 @@ if(BUILD_TESTING)
         OPENNOW_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
     qt_add_resources(opennow-consolelayout-tests "console-layout-test-assets"
         PREFIX "/qt/qml/OpenNOW" FILES ${OPENNOW_CONTROLLER_ICON_FILES}
-        res/fonts/Nunito-Variable.ttf
+        res/fonts/Outfit-Variable.ttf
+        res/fonts/Inter-Variable.ttf
         res/icons/nav-home.svg res/icons/nav-library.svg res/icons/nav-friends.svg
         res/icons/nav-settings.svg res/icons/nav-computer.svg)
     add_test(NAME opennow-consolelayout-tests COMMAND opennow-consolelayout-tests
@@ -202,7 +203,8 @@ if(BUILD_TESTING)
         OPENNOW_CONSOLE_ACTION_TEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/consoleactions")
     qt_add_resources(opennow-consoleactions-tests "console-action-test-assets"
         PREFIX "/qt/qml/OpenNOW" FILES ${OPENNOW_CONTROLLER_ICON_FILES} ${OPENNOW_KEYBOARD_ICON_FILES}
-        res/fonts/Nunito-Variable.ttf res/icons/nav-home.svg res/icons/nav-library.svg
+        res/fonts/Outfit-Variable.ttf res/fonts/Inter-Variable.ttf
+        res/icons/nav-home.svg res/icons/nav-library.svg
         res/icons/nav-friends.svg res/icons/nav-settings.svg res/icons/nav-computer.svg
         res/icons/store-steam.svg)
     add_test(NAME opennow-consoleactions-tests COMMAND opennow-consoleactions-tests

@@ -513,9 +513,9 @@ ApplicationWindow {
         layer.effect: HdrChromeEffect {}
         gradient: Gradient {
             orientation: Gradient.Vertical
-            GradientStop { position: 0; color: Qt.darker(Theme.shell, 1.12) }
+            GradientStop { position: 0; color: Qt.darker(Theme.shell, 1.18) }
             GradientStop { position: 0.5; color: Theme.shell }
-            GradientStop { position: 1; color: Qt.darker(Theme.shell, 1.12) }
+            GradientStop { position: 1; color: Qt.darker(Theme.shell, 1.18) }
         }
         Rectangle {
             anchors.left: parent.left
@@ -524,7 +524,7 @@ ApplicationWindow {
             height: Math.round(parent.height * 0.28)
             gradient: Gradient {
                 orientation: Gradient.Vertical
-                GradientStop { position: 0; color: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.07) }
+                GradientStop { position: 0; color: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.10) }
                 GradientStop { position: 1; color: "transparent" }
             }
         }

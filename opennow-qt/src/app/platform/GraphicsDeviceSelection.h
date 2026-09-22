@@ -27,13 +27,22 @@ public:
     GraphicsDeviceSelection(QList<Adapter> adapters, QString requestedDeviceId,
                             QObject *parent = nullptr);
 
+    // Result of applying the active selection to a window. Selection is a preference, so
+    // only NoWindow is unrecoverable; the other cases mean Qt keeps its own device.
+    enum class ApplyResult {
+        Applied,
+        NotRequired,
+        AlreadyInitialized,
+        NoWindow,
+    };
+
     bool selectorVisible() const { return m_adapters.size() >= 2; }
     QVariantList choices() const;
     QString requestedDeviceId() const { return m_requestedDeviceId; }
     QString activeDeviceId() const { return m_active.id; }
     bool savedDeviceUnavailable() const;
     quint64 adapterLuid() const { return m_active.luid; }
-    bool applyTo(QQuickWindow *window) const;
+    ApplyResult applyTo(QQuickWindow *window) const;
 
 signals:
     void choicesChanged();
