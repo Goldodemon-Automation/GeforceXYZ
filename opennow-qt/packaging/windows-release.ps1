@@ -66,11 +66,31 @@ function Assert-OpenNowSignedPackage {
     }
 }
 
+function Assert-OpenNowReleaseMarker {
+    param([Parameter(Mandatory)][string]$Root)
+
+    $markers = @(Get-ChildItem $Root -Recurse -File | Where-Object Name -EQ "@Release")
+    if ($markers.Count -ne 1) {
+        throw "Expected exactly one @Release under $Root, found $($markers.Count)"
+    }
+    if ($markers[0].Length -eq 0) {
+        throw "@Release under $Root is empty"
+    }
+    $fields = @(Get-Content $markers[0].FullName)
+    foreach ($field in @("name:", "version:", "commit:")) {
+        if (-not ($fields | Where-Object { $_ -like "$field*" })) {
+            throw "@Release under $Root is missing the $field field"
+        }
+    }
+}
+
 function Assert-OpenNowPackagePayload {
     param(
         [Parameter(Mandatory)][string]$Root,
         [Parameter(Mandatory)][string]$DeploymentRoot
     )
+
+    Assert-OpenNowReleaseMarker -Root $Root
 
     $deployment = @{}
     foreach ($file in Get-OpenNowReleaseBinaries -Root $DeploymentRoot) {

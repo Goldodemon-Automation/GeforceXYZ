@@ -126,6 +126,78 @@ Testing login and gameplay requires a GeForce NOW account. Without one, you can 
 screenshot fixtures, and performance checks in the Qt app guide and the
 [acceptance runbook](docs/qt-acceptance.md).
 
+### Test status
+
+`ctest` covers the Qt shell, the acceptance flows, and the Rust crates. Two suites
+need hardware that cannot be assumed on every build machine, and they fail for that
+reason rather than for a code defect:
+
+- `opennow-nativeframegeneration-tests` needs a real GPU. On a software renderer it
+takes minutes and reports "never sustained frame generation from native source
+arrivals".
+- `opennow-performance-report-harness` enforces frame-interval budgets. Under a
+software renderer it can miss the worst-interval budget while its median and p95
+intervals stay inside it.
+
+Everything else passes. A handful of the five-second smoke budgets also time out when
+the suite runs with high parallelism on a loaded machine; each one passes on its own.
+
+## Releases and packaging
+
+There are no published GeforceXYZ builds yet. Packaging is scripted, so a release is
+reproducible from a clean checkout:
+
+```sh
+# portable ZIP only, no extra tooling
+scripts/package-qt-windows.sh -G ZIP
+
+# portable ZIP and MSI installer
+scripts/package-qt-windows.sh
+```
+
+The script configures the Release build, builds it, and runs CPack into
+`build/qt-packages`. Add `--no-build` to package a build you already have, or run
+`npm run qt:package` to drive CMake's `package` target directly.
+
+| Artifact | What it is | How it is used |
+| --- | --- | --- |
+| Portable ZIP | Unpacked build | Extract it anywhere and run `bin/OpenNOW.exe`. No install step. |
+| MSI installer | Standard installation | Double-click to install; it registers the app and adds a Start menu entry. |
+
+Every artifact carries a file named `@Release` at its root, beside `bin/`:
+
+```text
+name: OpenNOW
+version: 1.0.0
+version_numeric: 1.0.0
+platform: Windows
+architecture: x64
+commit: 810a288a9321
+built: 2026-09-22T06:47:33Z
+```
+
+The marker is written by `opennow-qt/cmake/ReleaseMarker.cmake`, so a nightly or
+supporter build labels itself with its own name and version. The version, commit, and
+timestamp above are from the build that produced the artifact, so your build will
+report its own. Both the portable ZIP and the MSI are unpacked and checked against the
+marker in CI before a release is published.
+
+The MSI generator needs WiX v3 (`candle` and `light`). CI installs it; locally you can
+provision it inside the project instead of installing anything system-wide:
+
+```sh
+scripts/package-qt-windows.sh --fetch-wix
+```
+
+Without WiX the script stops with that hint rather than producing a file that only
+looks like an installer. The same CMake project produces a `.deb` and an AppImage on
+Linux, and a `.dmg` plus `.zip` on macOS.
+
+Packages built outside release CI are unsigned, so Windows shows a SmartScreen warning
+on first run. Signing runs in
+[`qt-release-candidate.yml`](.github/workflows/qt-release-candidate.yml) using the
+repository's Authenticode secrets.
+
 ## Documentation
 
 | Topic | Where |
