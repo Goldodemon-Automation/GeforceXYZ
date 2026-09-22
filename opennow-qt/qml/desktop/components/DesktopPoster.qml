@@ -35,7 +35,7 @@ ItemDelegate {
             artwork: DesktopTokens.artworkUrl(root.game, false)
             cornerRadius: 12
             scrimStart: root.cardLifted || root.showPlay ? 0.48 : 1
-            fallbackColor: "#1A2232"
+            fallbackColor: "#1A1A1A"
         }
         Rectangle {
             x: art.x - DesktopTokens.cardOutlinePad

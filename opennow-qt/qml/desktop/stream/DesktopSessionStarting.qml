@@ -62,7 +62,7 @@ FocusScope {
         active: root.visible
     }
 
-    Rectangle { anchors.fill: parent; color: "#04060A" }
+    Rectangle { anchors.fill: parent; color: "#0D0D0D" }
     Image {
         anchors.fill: parent
         source: artwork.resolvedUrl
@@ -75,9 +75,9 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: "#C004060A" }
-            GradientStop { position: 0.5; color: "#AC04060A" }
-            GradientStop { position: 1; color: "#F204060A" }
+            GradientStop { position: 0; color: "#C00D0D0D" }
+            GradientStop { position: 0.5; color: "#AC0D0D0D" }
+            GradientStop { position: 1; color: "#F20D0D0D" }
         }
     }
 

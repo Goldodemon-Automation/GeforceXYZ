@@ -411,8 +411,9 @@ FocusScope {
         if (root.selectedSection === 5) {
             return [
                 choice("Theme", "Auto follows the system at sunset", "appTheme", ["auto","dark","light"], ["Auto","Midnight","Light"], "segments"),
-                {t:"Accent colour", d:"Focus ring, progress and active states", v:root.titleCase(settings.appAccentColor || "blue"), key:"appAccentColor", values:["violet","blue","amber","green","rose","coral","white"], labels:["Violet","Sky","Amber","Mint","Rose","Coral","White"], colors:[Theme.violet,Theme.focus,Theme.yellow,Theme.mint,"#FF8A9A",Theme.coral,Theme.face], control:"colors"},
-                choice("Backdrop", "What sits behind the glass", "themePack", ["nocturne","aurora","kraft","phosphor"], ["Aurora gradient","Nocturne","Console room","Off"], "segments"),
+                // Black / White / Gold keeps one accent: gold plus two monochrome stand-ins.
+                {t:"Accent colour", d:"Focus ring, progress and active states", v:root.titleCase(settings.appAccentColor || "gold"), key:"appAccentColor", values:["gold","silver","white"], labels:["Gold","Silver","White"], colors:[Theme.goldBright,Theme.violet,Theme.face], control:"colors"},
+                choice("Backdrop", "What sits behind the glass", "themePack", ["nocturne","aurora","kraft","phosphor"], ["Obsidian","Graphite","Carbon","Pure contrast"], "segments"),
                 toggle("Translucent glass", "Blur the backdrop through panels · off is faster on iGPUs", "translucentUI"),
                 choice("Tile style", "Shape of game tiles on My games", "posterSizeScale", [0.9,1.05,1.25], ["Compact","Soft","Round"], "segments"),
                 toggle("Tile labels", "Show the game name under each tile", "showTileLabels"),

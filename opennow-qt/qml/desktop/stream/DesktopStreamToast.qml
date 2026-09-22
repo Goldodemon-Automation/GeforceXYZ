@@ -11,7 +11,7 @@ Rectangle {
     property int batteryPercent: -1
     property var history: []
     property real lifetimeFraction: 1
-    readonly property color accent: warning ? "#F5A623" : "#1DB954"
+    readonly property color accent: warning ? Theme.coral : Theme.focus
     width: 384
     height: 68
     radius: 20
@@ -25,8 +25,10 @@ Rectangle {
         x: 16
         anchors.verticalCenter: parent.verticalCenter
         width: 38; height: 38; radius: 12
-        color: root.warning ? "#26F5A623" : "#241DB954"
-        border.color: root.warning ? "#4DF5A623" : "#471DB954"
+        color: root.warning ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.15)
+            : Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.14)
+        border.color: root.warning ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.30)
+            : Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.28)
         Image {
             anchors.centerIn: parent
             width: 22; height: 22

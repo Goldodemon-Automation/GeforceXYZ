@@ -247,7 +247,7 @@ FocusScope {
                             text: Boolean(modelData.inLibrary) ? qsTr("✓ Owned") : qsTr("Not owned")
                             color: Boolean(modelData.inLibrary)
                                 ? (platformOption.highlighted ? Theme.faceText : Theme.mint)
-                                : (platformOption.highlighted ? Qt.rgba(0.04, 0.06, 0.10, 0.6) : Theme.textMuted)
+                                : (platformOption.highlighted ? Qt.rgba(0.18, 0.18, 0.18, 0.6) : Theme.textMuted)
                             font.family: Theme.bodyFont
                             font.pixelSize: 12
                             font.weight: Font.Black

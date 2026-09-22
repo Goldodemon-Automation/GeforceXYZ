@@ -33,7 +33,7 @@ Item {
     RoundedArtwork {
         anchors.fill: parent
         artwork: root.artwork
-        fallbackColor: "#171B27"
+        fallbackColor: "#1A1A1A"
         cornerRadius: 12
         scrimStart: root.highlighted ? 0.48 : 1
     }

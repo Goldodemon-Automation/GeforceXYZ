@@ -13,7 +13,7 @@ ItemDelegate {
     property bool addTile: false
     property string eyebrow: ""
     property bool currentItem: false
-    readonly property real cornerRadius: wide ? 34 : 12
+    readonly property real cornerRadius: wide ? DesktopTokens.radiusCard + 6 : DesktopTokens.radiusCard
     signal menuRequested()
     highlighted: activeFocus || currentItem
 
@@ -74,11 +74,11 @@ ItemDelegate {
             anchors.right: parent.right; anchors.rightMargin: 14
             anchors.bottom: parent.bottom; anchors.bottomMargin: 14
             width: resumeText.implicitWidth + 42; height: 38; radius: 19
-            color: Theme.face
+            color: Theme.focus
             Row {
                 anchors.centerIn: parent; spacing: 8
-                ControllerGlyph { glyph: "A"; label: ""; glyphSize: 24; glyphColor: Theme.faceText }
-                Text { id: resumeText; anchors.verticalCenter: parent.verticalCenter; text: qsTr("Jump back in!"); color: Theme.faceText; font.family: Theme.bodyFont; font.pixelSize: 14; font.weight: Font.Black }
+                ControllerGlyph { glyph: "A"; label: ""; glyphSize: 24; glyphColor: Theme.focusText }
+                Text { id: resumeText; anchors.verticalCenter: parent.verticalCenter; text: qsTr("Jump back in!"); color: Theme.focusText; font.family: Theme.bodyFont; font.pixelSize: 14; font.weight: Font.Black }
             }
         }
 

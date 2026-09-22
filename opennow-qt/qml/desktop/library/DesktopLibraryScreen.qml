@@ -366,9 +366,9 @@ FocusScope {
             Rectangle {
                 id: playRow
                 width: parent.width; height: 36; radius: 9
-                color: playHover.hovered ? "#FFFFFF" : "#F2FFFFFF"
-                Text { x: 12; anchors.verticalCenter: parent.verticalCenter; text: "▶  " + qsTr("Play"); color: "#0B0F1A"; font.family: DesktopTokens.bodyFont; font.pixelSize: DesktopTokens.captionSize; font.weight: Font.Black }
-                KeyboardGlyph { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; shortcut: "Enter"; keySize: 20; ink: "#0B0F1A"; Accessible.name: qsTr("Enter") }
+                color: playHover.hovered ? Qt.darker(Theme.focus, 1.08) : Theme.focus
+                Text { x: 12; anchors.verticalCenter: parent.verticalCenter; text: "▶  " + qsTr("Play"); color: Theme.focusText; font.family: DesktopTokens.bodyFont; font.pixelSize: DesktopTokens.captionSize; font.weight: Font.Black }
+                KeyboardGlyph { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; shortcut: "Enter"; keySize: 20; ink: Theme.focusText; Accessible.name: qsTr("Enter") }
                 HoverHandler { id: playHover; cursorShape: Qt.PointingHandCursor }
                 TapHandler { onTapped: root.activateContext("play") }
             }

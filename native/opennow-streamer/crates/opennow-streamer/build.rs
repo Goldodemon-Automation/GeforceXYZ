@@ -1,5 +1,9 @@
 fn main() {
-    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
+    // Delay-loading Media Foundation is an MSVC link feature. MinGW's ld has no
+    // /DELAYLOAD or delayimp, so it must stay out of GNU toolchain links.
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows")
+        && std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc")
+    {
         println!("cargo:rustc-link-arg=/DELAYLOAD:mfplat.dll");
         println!("cargo:rustc-link-lib=delayimp");
     }

@@ -28,8 +28,8 @@ public slots:
     void applicationAvailable()
     {
         const auto source = QStringLiteral(OPENNOW_QML_SOURCE_DIR);
-        QFontDatabase::addApplicationFont(source + "/../res/fonts/Nunito-Variable.ttf");
-        QFontDatabase::addApplicationFont(source + "/../res/fonts/IBMPlexMono-Medium.ttf");
+        QFontDatabase::addApplicationFont(source + "/../res/fonts/Outfit-Variable.ttf");
+        QFontDatabase::addApplicationFont(source + "/../res/fonts/Inter-Variable.ttf");
         qmlRegisterSingletonType(QUrl::fromLocalFile(source + "/theme/Theme.qml"), "OpenNOW.ThemeTests", 1, 0, "Theme");
         qmlRegisterType(QUrl::fromLocalFile(source + "/state/settings/SettingsState.qml"), "OpenNOW.ThemeTests", 1, 0, "SettingsState");
         for (const auto &entry : {std::pair{"Theme", "theme/Theme.qml"},

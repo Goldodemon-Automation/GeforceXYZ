@@ -3,15 +3,21 @@ import QtQuick.Controls
 import QtQuick.Window
 import OpenNOW
 
+// Navigation drawer. It sits off-canvas until the top-bar menu button opens it,
+// then slides over the page on its own scrim instead of reserving a rail.
 FocusScope {
     id: root
     objectName: "desktopSidebar"
     property string currentRoute: "home"
+    property string subtitle: ""
     property bool collapsed: true
-    property bool hoverExpanded: false
-    readonly property bool overlayOpen: !collapsed || hoverExpanded
-    readonly property bool compact: !overlayOpen
-    readonly property real reveal: Math.max(0, Math.min(1, (width - DesktopTokens.railCollapsedWidth) / (DesktopTokens.railWidth - DesktopTokens.railCollapsedWidth)))
+    readonly property bool overlayOpen: !collapsed
+    // 0 while the drawer is parked off-canvas and 1 once it is open. It is a
+    // real value rather than a flag so fades can follow the slide.
+    property real reveal: overlayOpen ? 1 : 0
+    Behavior on reveal {
+        NumberAnimation { duration: AppController.reducedMotion ? 0 : DesktopTokens.motionDuration; easing.type: Easing.OutCubic }
+    }
     readonly property bool consoleModeOn: DesktopTokens.consoleModeOn(Window.window)
     readonly property bool consoleModePending: DesktopTokens.consoleModePending(Window.window)
     readonly property bool friendsAvailable: Boolean(ShellStore.socialCapabilities && ShellStore.socialCapabilities.friendsAvailable)
@@ -20,18 +26,36 @@ FocusScope {
     signal collapseRequested(bool collapsed)
     signal createCollectionRequested()
 
-    x: 0
-    width: overlayOpen ? DesktopTokens.railWidth : DesktopTokens.railCollapsedWidth
+    width: DesktopTokens.drawerWidth
     height: parent ? parent.height : 900
-    z: overlayOpen ? 40 : 3
+    x: overlayOpen ? 0 : -width
+    // A closed drawer neither paints nor takes keyboard focus; the slide-out
+    // still plays because x keeps animating while it is hidden.
+    enabled: overlayOpen
+    visible: x > -width + 0.5
 
     function closeOverlay() {
-        hoverExpanded = false
         if (!collapsed)
             collapseRequested(true)
     }
 
-    Behavior on width {
+    function regionStatusText() {
+        const selected = String(ShellStore.settings.region || "")
+        if (selected === "")
+            return qsTr("Automatic region")
+        const regions = ShellStore.regions || []
+        for (let i = 0; i < regions.length; ++i) {
+            if (regions[i].name === selected || regions[i].url === selected) {
+                const ping = ShellStore.regionPingResults ? ShellStore.regionPingResults[regions[i].url] : undefined
+                const name = String(regions[i].name || selected)
+                return ping === undefined || ping === null || ping === ""
+                    ? name : qsTr("%1 · %2 ms").arg(name).arg(ping)
+            }
+        }
+        return selected
+    }
+
+    Behavior on x {
         NumberAnimation { duration: AppController.reducedMotion ? 0 : DesktopTokens.motionDuration; easing.type: Easing.OutCubic }
     }
 
@@ -47,11 +71,11 @@ FocusScope {
         // The login claim goes stale (e.g. upgrade after sign-in); the live
         // subscription is authoritative, the cached claim is the fallback.
         if (ShellStore.subscription && ShellStore.subscription.membershipTier)
-            return String(ShellStore.subscription.membershipTier).toUpperCase()
+            return DesktopTokens.displayCase(ShellStore.subscription.membershipTier)
         if (ShellStore.signedIn && ShellStore.authSession && ShellStore.authSession.user
                 && ShellStore.authSession.user.membershipTier)
-            return String(ShellStore.authSession.user.membershipTier).toUpperCase()
-        return ShellStore.signedIn ? qsTr("Member").toUpperCase() : qsTr("NOT SIGNED IN")
+            return DesktopTokens.displayCase(ShellStore.authSession.user.membershipTier)
+        return ShellStore.signedIn ? qsTr("Member") : qsTr("Not signed in")
     }
 
     function routeSelected(route) {
@@ -64,370 +88,283 @@ FocusScope {
 
     Rectangle {
         anchors.fill: parent
-        color: DesktopTokens.shell
-        Rectangle {
-            anchors.right: parent.right
-            width: 1
-            height: parent.height
-            color: root.overlayOpen ? "#29FFFFFF" : DesktopTokens.seamSoft
-        }
-    }
-
-    Rectangle {
-        visible: root.overlayOpen
-        x: root.width
-        width: DesktopTokens.px(40)
-        height: parent.height
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0; color: "#A8000000" }
-            GradientStop { position: 1; color: "#00000000" }
-        }
-    }
-
-    HoverHandler {
-        acceptedDevices: PointerDevice.Mouse
-        enabled: !SmokeTestMode && ShellStore.settings.desktopSidebarHover !== false
-        onHoveredChanged: root.hoverExpanded = root.collapsed && hovered && ShellStore.settings.desktopSidebarHover !== false
+        color: DesktopTokens.drawer
+        Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: DesktopTokens.edgeInk }
     }
 
     Item {
         anchors.fill: parent
         clip: true
-        anchors.topMargin: 16
-        anchors.leftMargin: 14
-        anchors.rightMargin: 14
-        anchors.bottomMargin: 12
+        anchors.topMargin: DesktopTokens.px(12)
+        anchors.leftMargin: DesktopTokens.px(10)
+        anchors.rightMargin: DesktopTokens.px(10)
+        anchors.bottomMargin: DesktopTokens.px(10)
+
+        Column {
+            id: topColumn
+            width: parent.width
+            spacing: DesktopTokens.px(10)
+
+            Item {
+                width: parent.width
+                height: DesktopTokens.px(34)
+
+                Image {
+                    id: brandMark
+                    width: DesktopTokens.px(38)
+                    height: DesktopTokens.px(21)
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: "qrc:/qt/qml/OpenNOW/res/brand/opennow-mark.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: false
+                    sourceSize: Qt.size(Math.ceil(width * Screen.devicePixelRatio), Math.ceil(height * Screen.devicePixelRatio))
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: brandMark.right
+                    anchors.leftMargin: DesktopTokens.px(10)
+                    text: qsTr("GeforceXYZ")
+                    color: DesktopTokens.text
+                    font.family: DesktopTokens.displayFont
+                    font.pixelSize: DesktopTokens.px(16)
+                    font.weight: Font.Bold
+                    font.letterSpacing: -0.2
+                }
+
+                AbstractButton {
+                    id: closeButton
+                    objectName: "desktopDrawerClose"
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: DesktopTokens.px(30)
+                    height: width
+                    hoverEnabled: true
+                    Accessible.name: qsTr("Close navigation")
+                    onClicked: root.closeOverlay()
+                    background: Rectangle {
+                        radius: DesktopTokens.px(6)
+                        color: closeButton.hovered || closeButton.activeFocus ? DesktopTokens.raised : "transparent"
+                    }
+                    contentItem: DesktopSettingsIcon {
+                        anchors.centerIn: parent
+                        width: DesktopTokens.px(14)
+                        height: width
+                        glyph: "close"
+                        ink: DesktopTokens.textBody
+                    }
+                }
+            }
+
+            Text {
+                width: parent.width
+                visible: root.subtitle !== ""
+                text: root.subtitle
+                elide: Text.ElideRight
+                color: DesktopTokens.textMuted
+                font.family: DesktopTokens.bodyFont
+                font.pixelSize: DesktopTokens.px(12)
+            }
+
+            Rectangle { width: parent.width; height: 1; color: DesktopTokens.seamSoft }
+        }
 
         Flickable {
             id: railFlick
-            anchors.top: parent.top
+            anchors.top: topColumn.bottom
+            anchors.topMargin: DesktopTokens.px(10)
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: dock.top
-            anchors.bottomMargin: 8
+            anchors.bottomMargin: DesktopTokens.px(8)
             clip: true
             contentWidth: width
-            contentHeight: topColumn.implicitHeight
+            contentHeight: navColumn.implicitHeight
             boundsBehavior: Flickable.StopAtBounds
             flickableDirection: Flickable.VerticalFlick
 
             Column {
-                id: topColumn
+                id: navColumn
                 width: railFlick.width
-                spacing: 10
+                spacing: DesktopTokens.px(2)
 
-        Item {
-            width: parent.width
-            height: 28
-
-            Image {
-                id: brandMark
-                width: 40
-                height: 22
-                anchors.verticalCenter: parent.verticalCenter
-                x: 2
-                source: "qrc:/qt/qml/OpenNOW/res/brand/opennow-mark.png"
-                fillMode: Image.PreserveAspectFit
-                smooth: false
-                sourceSize: Qt.size(Math.ceil(width * Screen.devicePixelRatio), Math.ceil(height * Screen.devicePixelRatio))
-            }
-
-            Text {
-                visible: root.reveal > 0
-                        opacity: root.reveal
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: brandMark.right
-                anchors.leftMargin: 10
-                text: "OpenNOW"
-                color: DesktopTokens.text
-                font.family: DesktopTokens.displayFont
-                font.pixelSize: DesktopTokens.headingSize
-                font.weight: Font.Black
-                font.letterSpacing: -0.32
-            }
-
-            Rectangle {
-                id: collapseButton
-                visible: false
-                width: 28
-                height: 28
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                radius: 9
-                color: collapseHover.hovered || collapseButton.activeFocus ? "#17FFFFFF" : "#0FFFFFFF"
-                border.width: 1
-                border.color: "#17FFFFFF"
-                Accessible.role: Accessible.Button
-                Accessible.name: qsTr("Collapse sidebar")
-                Accessible.onPressAction: {
-                    root.hoverExpanded = false
-                    root.collapseRequested(true)
-                }
-
-                DesktopGlyph {
-                    anchors.centerIn: parent
-                    width: 13
-                    height: 13
-                    icon: "desktop-collapse.svg"
-                }
-                HoverHandler { id: collapseHover; cursorShape: Qt.PointingHandCursor }
-                TapHandler {
-                    onTapped: {
-                        root.hoverExpanded = false
-                        root.collapseRequested(true)
-                    }
-                }
-            }
-        }
-
-        Item {
-            width: parent.width
-            height: 28
-            Rectangle {
-                id: expandButton
-                width: 40
-                height: 28
-                x: 2
-                radius: 9
-                color: expandHover.hovered || expandButton.activeFocus ? "#17FFFFFF" : "#0FFFFFFF"
-                border.width: 1
-                border.color: "#17FFFFFF"
-                Accessible.role: Accessible.Button
-                Accessible.name: root.overlayOpen ? qsTr("Collapse sidebar") : qsTr("Expand sidebar")
-                Accessible.onPressAction: {
-                    const closing = root.overlayOpen
-                    root.hoverExpanded = false
-                    root.collapseRequested(closing)
-                }
-
-                DesktopGlyph {
-                    anchors.centerIn: parent
-                    width: 13
-                    height: 13
-                    icon: root.overlayOpen ? "desktop-collapse.svg" : "desktop-expand.svg"
-                }
-                HoverHandler { id: expandHover; cursorShape: Qt.PointingHandCursor }
-                TapHandler {
-                    onTapped: {
-                        const closing = root.overlayOpen
-                        root.hoverExpanded = false
-                        root.collapseRequested(closing)
-                    }
-                }
-            }
-        }
-
-        Item {
-            width: parent.width
-            height: 1
-            Rectangle {
-                width: 28
-                height: 1
-                anchors.horizontalCenter: parent.horizontalCenter
-                color: DesktopTokens.seamSoft
-            }
-        }
-
-        Column {
-            width: parent.width
-            spacing: 3
-
-            Repeater {
-                model: root.navItems
-                delegate: ItemDelegate {
-                    id: navButton
-                    required property var modelData
-                    width: parent.width
-                    height: 44
-                    padding: 0
-                    readonly property bool selected: root.routeSelected(modelData.route)
-                    Accessible.name: modelData.name
-                    background: Rectangle {
-                        radius: 10
-                        color: navButton.selected ? DesktopTokens.raisedStrong
-                            : (navButton.hovered || navButton.activeFocus ? DesktopTokens.raised : "transparent")
-                    }
-                    contentItem: Item {
-                        DesktopGlyph {
-                            objectName: "sidebarIcon-" + navButton.modelData.route
-                            x: 13
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 18
-                            height: 18
-                            icon: navButton.modelData.icon
-                            active: navButton.selected
+                Repeater {
+                    model: root.navItems
+                    delegate: AbstractButton {
+                        id: navButton
+                        required property var modelData
+                        width: navColumn.width
+                        height: DesktopTokens.px(40)
+                        hoverEnabled: true
+                        readonly property bool selected: root.routeSelected(modelData.route)
+                        Accessible.name: modelData.name
+                        Accessible.checked: selected
+                        onClicked: {
+                            if (modelData.route === "library")
+                                ShellStore.activeCollectionId = ""
+                            root.routeRequested(modelData.route)
                         }
-                        Text {
-                            x: 48
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: root.reveal > 0
-                        opacity: root.reveal
-                            text: navButton.modelData.name
-                            color: navButton.selected ? DesktopTokens.text : DesktopTokens.textMuted
-                            font.family: DesktopTokens.bodyFont
-                            font.pixelSize: DesktopTokens.px(14)
-                            font.weight: navButton.selected ? Font.ExtraBold : Font.DemiBold
+                        background: Rectangle {
+                            radius: DesktopTokens.px(6)
+                            color: navButton.selected ? DesktopTokens.raisedStrong
+                                : navButton.hovered || navButton.activeFocus ? DesktopTokens.raised : "transparent"
                         }
-                        Row {
-                            anchors.right: parent.right
-                            anchors.rightMargin: 10
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: navButton.modelData.route === "friends" && !navButton.selected
-                            Rectangle {
-                                width: 6
-                                height: 6
-                                radius: 3
+                        contentItem: Item {
+                            DesktopGlyph {
+                                objectName: "sidebarIcon-" + navButton.modelData.route
+                                x: DesktopTokens.px(12)
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: root.friendsAvailable ? DesktopTokens.green : DesktopTokens.textFaint
+                                width: DesktopTokens.px(18)
+                                height: width
+                                icon: navButton.modelData.icon
+                                active: navButton.selected
+                            }
+                            Text {
+                                x: DesktopTokens.px(44)
+                                width: Math.max(0, parent.width - x - DesktopTokens.px(12))
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: navButton.modelData.name
+                                elide: Text.ElideRight
+                                color: navButton.selected ? DesktopTokens.text : DesktopTokens.textBody
+                                font.family: DesktopTokens.bodyFont
+                                font.pixelSize: DesktopTokens.px(14)
+                                font.weight: navButton.selected ? Font.DemiBold : Font.Normal
+                            }
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: navButton.selected
+                                width: DesktopTokens.accentBarWidth
+                                height: DesktopTokens.px(18)
+                                radius: width / 2
+                                color: DesktopTokens.focus
+                            }
+                            Rectangle {
+                                anchors.right: parent.right
+                                anchors.rightMargin: DesktopTokens.px(12)
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: navButton.modelData.route === "friends" && !navButton.selected
+                                width: DesktopTokens.px(6)
+                                height: width
+                                radius: width / 2
+                                color: root.friendsAvailable ? DesktopTokens.mint : DesktopTokens.textFaint
                             }
                         }
-                        Rectangle {
-                            anchors.right: parent.right
-                            anchors.rightMargin: 10
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: navButton.selected && !root.compact
-                            width: 4
-                            height: 16
-                            radius: 999
-                            color: DesktopTokens.focus
-                        }
-                    }
-                    onClicked: {
-                        if (modelData.route === "library")
-                            ShellStore.activeCollectionId = ""
-                        root.routeRequested(modelData.route)
                     }
                 }
-            }
-        }
 
-        Item {
-            width: parent.width
-            height: 44 + collectionRows.height
-            Item {
-                width: DesktopTokens.railWidth - 28
-                height: 36
-                Rectangle {
-                    x: 8; width: 28; height: 1
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: DesktopTokens.seamSoft
-                }
-                Text {
-                    x: 48
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: root.reveal > 0
-                    opacity: root.reveal
-                    text: qsTr("COLLECTIONS")
-                    color: DesktopTokens.textFaint
-                    font.family: DesktopTokens.monoFont
-                    font.pixelSize: 9
-                    font.weight: Font.DemiBold
-                    font.letterSpacing: 0.9
-                }
-                Button {
-                    id: createCollectionButton
-                    objectName: "createCollectionButton"
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 32
-                    height: 32
-                    visible: root.reveal > 0
-                    opacity: root.reveal
-                    enabled: root.overlayOpen && !ShellStore.collectionsBusy
-                    Accessible.name: qsTr("New collection")
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("New collection")
-                    background: Rectangle { radius: 8; color: createCollectionButton.hovered || createCollectionButton.activeFocus ? DesktopTokens.raised : "transparent" }
-                    contentItem: DesktopGlyph {
-                        width: createCollectionButton.availableWidth
-                        height: createCollectionButton.availableHeight
-                        icon: "desktop-plus.svg"
-                    }
-                    onClicked: root.createCollectionRequested()
-                }
-            }
-
-            Column {
-                id: collectionRows
-                y: 40
-                width: parent.width
-                height: implicitHeight * root.reveal
-                clip: true
-                spacing: 1
-            Repeater {
-                model: ShellStore.gameCollections
-                delegate: Button {
-                    id: collectionRow
-                    required property var modelData
+                Item {
                     width: parent.width
-                    height: 36
-                    opacity: root.reveal
-                    enabled: root.overlayOpen
-                    clip: true
-                    Accessible.name: modelData.name
-                    background: Rectangle {
-                        radius: 8
-                        color: ShellStore.activeCollectionId === collectionRow.modelData.id && root.currentRoute === "library"
-                            ? DesktopTokens.raisedStrong : collectionRow.hovered || collectionRow.activeFocus ? DesktopTokens.raised : "transparent"
-                    }
-                    contentItem: Item {
-                    width: DesktopTokens.railWidth - 28
-                    height: 36
-                    DesktopGlyph {
-                        objectName: "sidebarCollectionIcon-" + collectionRow.modelData.id
-                        x: 9
+                    height: DesktopTokens.px(40)
+
+                    Rectangle {
+                        x: DesktopTokens.px(4)
+                        width: DesktopTokens.px(24)
+                        height: 1
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 16
-                        height: width
-                        icon: "desktop-nav-library.svg"
+                        color: DesktopTokens.seamSoft
                     }
                     Text {
-                        x: 42
-                        width: parent.width - x - 44
-                        elide: Text.ElideRight
-                        textFormat: Text.PlainText
+                        x: DesktopTokens.px(44)
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: root.reveal > 0
-                        opacity: root.reveal
-                        text: collectionRow.modelData.name
-                        color: collectionRow.hovered ? DesktopTokens.text : DesktopTokens.textMuted
-                        font.family: DesktopTokens.bodyFont
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
-                    }
-                    Text {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: root.reveal > 0
-                        opacity: root.reveal
-                        text: collectionRow.modelData.gameIds.length
+                        text: qsTr("COLLECTIONS")
                         color: DesktopTokens.textFaint
                         font.family: DesktopTokens.monoFont
-                        font.pixelSize: 10
+                        font.pixelSize: DesktopTokens.tinySize
                         font.weight: Font.DemiBold
+                        font.letterSpacing: 0.9
                     }
-                    }
-                    onClicked: {
-                        ShellStore.activeCollectionId = modelData.id
-                        root.routeRequested("library")
-                        root.closeOverlay()
+                    AbstractButton {
+                        id: createCollectionButton
+                        objectName: "createCollectionButton"
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: DesktopTokens.px(28)
+                        height: width
+                        enabled: !ShellStore.collectionsBusy
+                        Accessible.name: qsTr("New collection")
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("New collection")
+                        background: Rectangle {
+                            radius: DesktopTokens.px(6)
+                            color: createCollectionButton.hovered || createCollectionButton.activeFocus ? DesktopTokens.raised : "transparent"
+                        }
+                        contentItem: DesktopGlyph {
+                            width: DesktopTokens.px(14)
+                            height: width
+                            anchors.centerIn: parent
+                            icon: "desktop-plus.svg"
+                        }
+                        onClicked: root.createCollectionRequested()
                     }
                 }
-            }
+
+                Repeater {
+                    model: ShellStore.gameCollections
+                    delegate: AbstractButton {
+                        id: collectionRow
+                        required property var modelData
+                        width: navColumn.width
+                        height: DesktopTokens.px(36)
+                        hoverEnabled: true
+                        Accessible.name: modelData.name
+                        onClicked: {
+                            ShellStore.activeCollectionId = modelData.id
+                            root.routeRequested("library")
+                            root.closeOverlay()
+                        }
+                        background: Rectangle {
+                            radius: DesktopTokens.px(6)
+                            color: ShellStore.activeCollectionId === collectionRow.modelData.id
+                                   && root.currentRoute === "library"
+                                ? DesktopTokens.raisedStrong
+                                : collectionRow.hovered || collectionRow.activeFocus ? DesktopTokens.raised : "transparent"
+                        }
+                        contentItem: Item {
+                            DesktopGlyph {
+                                objectName: "sidebarCollectionIcon-" + collectionRow.modelData.id
+                                x: DesktopTokens.px(13)
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: DesktopTokens.px(15)
+                                height: width
+                                icon: "desktop-nav-library.svg"
+                            }
+                            Text {
+                                x: DesktopTokens.px(44)
+                                width: Math.max(0, parent.width - x - DesktopTokens.px(44))
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: collectionRow.modelData.name
+                                textFormat: Text.PlainText
+                                elide: Text.ElideRight
+                                color: collectionRow.hovered ? DesktopTokens.text : DesktopTokens.textBody
+                                font.family: DesktopTokens.bodyFont
+                                font.pixelSize: DesktopTokens.px(13)
+                                font.weight: Font.Normal
+                            }
+                            Text {
+                                anchors.right: parent.right
+                                anchors.rightMargin: DesktopTokens.px(12)
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: collectionRow.modelData.gameIds.length
+                                color: DesktopTokens.textFaint
+                                font.family: DesktopTokens.monoFont
+                                font.pixelSize: DesktopTokens.tinySize
+                                font.weight: Font.DemiBold
+                            }
+                        }
+                    }
+                }
+
                 Text {
-                    x: 8
-                    width: parent.width - 16
+                    x: DesktopTokens.px(44)
+                    width: Math.max(0, parent.width - x - DesktopTokens.px(12))
                     visible: ShellStore.gameCollections.length === 0
                     text: qsTr("Create your first collection with +")
                     wrapMode: Text.WordWrap
                     color: DesktopTokens.textFaint
                     font.family: DesktopTokens.bodyFont
-                    font.pixelSize: 12
+                    font.pixelSize: DesktopTokens.px(12)
                 }
-            }
-        }
             }
         }
 
@@ -436,19 +373,36 @@ FocusScope {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            spacing: 4
+            spacing: DesktopTokens.px(4)
 
-            Rectangle {
+            Rectangle { width: parent.width; height: 1; color: DesktopTokens.seamSoft }
+
+            Row {
                 width: parent.width
-                height: 1
-                color: DesktopTokens.seamSoft
+                height: DesktopTokens.px(22)
+                spacing: DesktopTokens.px(7)
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: DesktopTokens.px(6)
+                    height: width
+                    radius: width / 2
+                    color: ShellStore.signedIn ? DesktopTokens.focus : DesktopTokens.textFaint
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(0, parent.width - DesktopTokens.px(13))
+                    elide: Text.ElideRight
+                    text: root.regionStatusText()
+                    color: DesktopTokens.textMuted
+                    font.family: DesktopTokens.bodyFont
+                    font.pixelSize: DesktopTokens.px(11.5)
+                }
             }
 
-            ItemDelegate {
+            AbstractButton {
                 id: consoleModeButton
                 width: parent.width
-                height: 44
-                padding: 0
+                height: DesktopTokens.px(40)
                 enabled: !root.consoleModePending
                 opacity: root.consoleModePending ? 0.7 : 1
                 Accessible.name: qsTr("Console mode")
@@ -456,165 +410,117 @@ FocusScope {
                     ? qsTr("Switching surfaces")
                     : (root.consoleModeOn ? qsTr("Console mode is on") : qsTr("Console mode is off"))
                 Behavior on opacity { NumberAnimation { duration: DesktopTokens.quickDuration } }
+                hoverEnabled: true
                 background: Rectangle {
-                    radius: 11
-                    color: consoleModeButton.hovered || consoleModeButton.activeFocus ? "#0CFFFFFF" : "transparent"
+                    radius: DesktopTokens.px(6)
+                    color: consoleModeButton.hovered || consoleModeButton.activeFocus ? DesktopTokens.raised : "transparent"
                 }
                 contentItem: Item {
                     DesktopGlyph {
-                        x: 13.5
+                        x: DesktopTokens.px(12)
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 17
-                        height: 17
+                        width: DesktopTokens.px(17)
+                        height: width
                         icon: "desktop-gamepad.svg"
                     }
                     Column {
-                        x: 48
-                        width: Math.max(0, parent.width - x - 52)
+                        x: DesktopTokens.px(44)
+                        width: Math.max(0, parent.width - x - DesktopTokens.px(52))
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: root.reveal > 0
-                        opacity: root.reveal
-                        spacing: 2
+                        spacing: 0
                         Text {
                             width: parent.width
                             elide: Text.ElideRight
                             text: root.consoleModePending ? qsTr("Console mode…") : qsTr("Console mode")
-                            color: DesktopTokens.textHigh
+                            color: DesktopTokens.text
                             font.family: DesktopTokens.bodyFont
-                            font.pixelSize: 13
-                            font.weight: Font.Bold
+                            font.pixelSize: DesktopTokens.px(13)
+                            font.weight: Font.Normal
                         }
-                        Row {
-                            spacing: 5
-                            Rectangle {
-                                width: 5
-                                height: 5
-                                radius: 3
-                                color: root.consoleModePending ? DesktopTokens.amber
-                                    : root.consoleModeOn ? DesktopTokens.mint : DesktopTokens.ledAmber
-                                SequentialAnimation on opacity {
-                                    running: root.consoleModePending
-                                    loops: Animation.Infinite
-                                    NumberAnimation { to: 0.25; duration: 420 }
-                                    NumberAnimation { to: 1; duration: 420 }
-                                }
-                            }
-                            Text {
-                                text: root.consoleModePending ? qsTr("SWITCHING…")
-                                    : root.consoleModeOn ? qsTr("CONSOLE ON") : qsTr("GAMEPAD READY")
-                                color: DesktopTokens.textMuted
-                                font.family: DesktopTokens.monoFont
-                                font.pixelSize: 9
-                                font.weight: Font.DemiBold
-                                font.letterSpacing: 0.36
-                            }
-                        }
-                    }
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: root.reveal > 0
-                        opacity: root.reveal
-                        width: 32
-                        height: 19
-                        radius: 999
-                        color: root.consoleModeOn ? "#2E6EE7B7" : "#1FFFFFFF"
-                        border.width: 1
-                        border.color: root.consoleModeOn ? "#526EE7B7" : "#1AFFFFFF"
-                        Rectangle {
-                            x: root.consoleModeOn ? 17 : 2
-                            y: 2
-                            width: 13
-                            height: 13
-                            radius: 999
-                            color: root.consoleModeOn ? DesktopTokens.focus : "#CCFFFFFF"
-                            Behavior on x { NumberAnimation { duration: DesktopTokens.quickDuration; easing.type: Easing.OutCubic } }
-                        }
-                    }
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        width: 7
-                        height: 7
-                        radius: 4
-                        visible: root.compact
-                        color: root.consoleModePending ? DesktopTokens.amber
-                            : root.consoleModeOn ? DesktopTokens.mint : DesktopTokens.ledAmber
-                    }
-                }
-                onClicked: root.consoleModeRequested()
-            }
-
-            ItemDelegate {
-                id: profileButton
-                width: parent.width
-                height: 44
-                padding: 0
-                Accessible.name: qsTr("Profile")
-                background: Rectangle {
-                    radius: 11
-                    color: profileButton.hovered || profileButton.activeFocus ? "#0CFFFFFF" : "transparent"
-                }
-                contentItem: Item {
-                    Rectangle {
-                        x: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 36
-                        height: 36
-                        radius: 999
-                        color: "#17FFFFFF"
-                        border.width: 1
-                        border.color: "#29FFFFFF"
-                        Text {
-                            anchors.centerIn: parent
-                            text: ShellStore.signedIn && ShellStore.authSession.user
-                                ? String(ShellStore.authSession.user.displayName || "?").charAt(0).toUpperCase()
-                                : "Z"
-                            color: DesktopTokens.textHigh
-                            font.family: DesktopTokens.bodyFont
-                            font.pixelSize: DesktopTokens.monoSize
-                            font.weight: Font.Black
-                        }
-                    }
-                    Column {
-                        x: 48
-                        width: Math.max(0, parent.width - x - 28)
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: root.reveal > 0
-                        opacity: root.reveal
-                        spacing: 2
                         Text {
                             width: parent.width
                             elide: Text.ElideRight
-                            text: ShellStore.signedIn && ShellStore.authSession.user
-                                ? ShellStore.authSession.user.displayName
-                                : qsTr("Guest")
-                            color: DesktopTokens.textHigh
-                            font.family: DesktopTokens.bodyFont
-                            font.pixelSize: DesktopTokens.captionSize
-                            font.weight: Font.Bold
-                        }
-                        Text {
-                            text: root.liveMembershipTier()
-                            width: parent.width
-                            elide: Text.ElideRight
-                            color: DesktopTokens.textFaint
+                            text: root.consoleModePending ? qsTr("SWITCHING…")
+                                : root.consoleModeOn ? qsTr("CONSOLE ON") : qsTr("GAMEPAD READY")
+                            color: DesktopTokens.textMuted
                             font.family: DesktopTokens.monoFont
                             font.pixelSize: DesktopTokens.tinySize
                             font.weight: Font.DemiBold
                             font.letterSpacing: 0.36
                         }
                     }
-                    DesktopGlyph {
+                    Rectangle {
                         anchors.right: parent.right
-                        anchors.rightMargin: 10
+                        anchors.rightMargin: DesktopTokens.px(4)
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: root.reveal > 0
-                        opacity: root.reveal
-                        width: 10
-                        height: 10
-                        icon: "desktop-chevron-up.svg"
+                        width: DesktopTokens.px(32)
+                        height: DesktopTokens.px(18)
+                        radius: width / 2
+                        color: root.consoleModeOn ? DesktopTokens.focus : DesktopTokens.raisedStrong
+                        Rectangle {
+                            x: root.consoleModeOn ? parent.width - width - 2 : 2
+                            y: 2
+                            width: DesktopTokens.px(14)
+                            height: width
+                            radius: width / 2
+                            color: root.consoleModeOn ? Theme.focusText : DesktopTokens.textMuted
+                            Behavior on x { NumberAnimation { duration: DesktopTokens.quickDuration; easing.type: Easing.OutCubic } }
+                        }
+                    }
+                }
+                onClicked: root.consoleModeRequested()
+            }
+
+            AbstractButton {
+                id: profileButton
+                width: parent.width
+                height: DesktopTokens.px(44)
+                hoverEnabled: true
+                Accessible.name: qsTr("Profile")
+                background: Rectangle {
+                    radius: DesktopTokens.px(6)
+                    color: profileButton.hovered || profileButton.activeFocus ? DesktopTokens.raised : "transparent"
+                }
+                contentItem: Item {
+                    Rectangle {
+                        x: DesktopTokens.px(2)
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: DesktopTokens.px(32)
+                        height: width
+                        radius: width / 2
+                        color: DesktopTokens.raisedStrong
+                        DesktopSettingsIcon {
+                            anchors.centerIn: parent
+                            width: DesktopTokens.px(20)
+                            height: width
+                            glyph: "user"
+                            ink: DesktopTokens.text
+                        }
+                    }
+                    Column {
+                        x: DesktopTokens.px(44)
+                        width: Math.max(0, parent.width - x - DesktopTokens.px(24))
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 0
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: ShellStore.signedIn && ShellStore.authSession.user
+                                ? ShellStore.authSession.user.displayName
+                                : qsTr("Guest")
+                            color: DesktopTokens.text
+                            font.family: DesktopTokens.bodyFont
+                            font.pixelSize: DesktopTokens.px(13)
+                            font.weight: Font.DemiBold
+                        }
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: root.liveMembershipTier()
+                            color: DesktopTokens.textMuted
+                            font.family: DesktopTokens.bodyFont
+                            font.pixelSize: DesktopTokens.px(11.5)
+                        }
                     }
                 }
                 onClicked: root.routeRequested("settings-account")

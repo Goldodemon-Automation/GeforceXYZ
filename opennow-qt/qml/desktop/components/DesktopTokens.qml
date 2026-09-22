@@ -29,35 +29,58 @@ QtObject {
     readonly property color topBar: Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.66)
     readonly property color statusBar: Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.78)
     readonly property color surface: Theme.glass
-    readonly property color raised: Theme.lightMode ? Qt.rgba(0.04, 0.06, 0.10, 0.08) : "#14FFFFFF"
-    readonly property color raisedStrong: Theme.lightMode ? Qt.rgba(0.04, 0.06, 0.10, 0.12) : "#1FFFFFFF"
+    // Neutral raise steps: no hue, just a lighter or darker step of the base.
+    readonly property color raised: Theme.lightMode ? Qt.rgba(0.18, 0.18, 0.18, 0.08) : "#14FFFFFF"
+    readonly property color raisedStrong: Theme.lightMode ? Qt.rgba(0.18, 0.18, 0.18, 0.13) : "#1FFFFFFF"
     readonly property color seam: Theme.seam
-    readonly property color seamSoft: Theme.lightMode ? Qt.rgba(0.04, 0.06, 0.10, 0.06) : "#0FFFFFFF"
+    readonly property color seamSoft: Theme.lightMode ? Qt.rgba(0.18, 0.18, 0.18, 0.07) : "#0FFFFFFF"
+    // Grey text ramp on a black UI: off-white for primary copy, mid grey for
+    // secondary, a darker grey step for captions. Dark grey (#2E2E2E) itself is
+    // chrome-only — on black it is 1.5:1, so it never carries text.
     readonly property color text: Theme.label
     readonly property color textHigh: Theme.label
     readonly property color textBody: Theme.textMuted
     readonly property color textMuted: Theme.textMuted
-    readonly property color textFaint: Theme.lightMode ? Qt.rgba(0.04, 0.06, 0.10, 0.32) : "#52FFFFFF"
+    readonly property color textFaint: Theme.lightMode ? Theme.greyMid : Theme.greyFaint
+    readonly property color divider: Theme.dimChrome
     readonly property color focus: Theme.focus
-    readonly property color green: "#1DB954"
-    readonly property color mint: "#56E6A5"
-    readonly property color amber: "#FFD166"
-    readonly property color ledAmber: "#F5A623"
-    readonly property color danger: "#FF8A80"
+    // Black UI · grey text · gold-bright accent: status colours are tonal, not
+    // chromatic, so one accent reads everywhere and no red/green pair appears.
+    readonly property color gold: Theme.lightMode ? Theme.goldDeep : Theme.goldBright
+    readonly property color goldBright: Theme.lightMode ? Theme.gold : Theme.goldBright
+    readonly property color goldEdge: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.42)
+    readonly property color goldWash: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.10)
+    readonly property color green: Theme.lightMode ? Theme.goldDeep : Theme.gold
+    readonly property color mint: Theme.lightMode ? Theme.goldDeep : Theme.goldBright
+    readonly property color amber: Theme.lightMode ? Theme.goldDeep : Theme.goldBright
+    readonly property color ledAmber: Theme.lightMode ? Theme.goldDeep : Theme.goldBright
+    readonly property color danger: Theme.coral
     readonly property string displayFont: Theme.displayFont
     readonly property string bodyFont: Theme.bodyFont
     readonly property string monoFont: Theme.monoFont
     property real uiScale: 1
     // Type ramp. Every desktop font size must come from here so text stays
     // proportionate on any display size; raw pixelSize literals drift.
-    readonly property int titleSize: px(26)
-    readonly property int headingSize: px(17)
+    readonly property int titleSize: px(28)
+    readonly property int headingSize: px(18)
     readonly property int bodySize: px(15)
     readonly property int captionSize: px(13)
     readonly property int monoSize: px(12)
     readonly property int smallSize: px(11)
     readonly property int microSize: px(10)
     readonly property int tinySize: px(9)
+    // Geometry ramp. Hairline seams, generous radii, and one rhythm for
+    // padding keep the black surfaces reading as a single material.
+    readonly property int radiusPanel: px(20)
+    readonly property int radiusCard: px(14)
+    readonly property int radiusControl: px(10)
+    readonly property int radiusPill: px(999)
+    readonly property int hairline: 1
+    readonly property int spaceXs: px(6)
+    readonly property int spaceSm: px(10)
+    readonly property int spaceMd: px(16)
+    readonly property int spaceLg: px(24)
+    readonly property int spaceXl: px(36)
     readonly property int railWidth: px(232)
     readonly property int railCollapsedWidth: px(72)
     readonly property int topBarHeight: px(64)
@@ -79,9 +102,77 @@ QtObject {
     readonly property int quickDuration: AppController.reducedMotion ? 0 : 120
     readonly property int motionDuration: AppController.reducedMotion ? 0 : 220
     readonly property int revealDuration: AppController.reducedMotion ? 0 : 320
-    readonly property real cardHoverScale: 1.025
+
+    // ---------------------------------------------------------------------
+    // GeForce NOW-style desktop chrome
+    //
+    // The shell is a full-width top bar over flat content: navigation lives in
+    // a drawer, Settings uses a plain topic list with one accent bar, and
+    // shelves are wide artwork tiles. These tokens keep that geometry and the
+    // two extra surface steps in one place.
+    // ---------------------------------------------------------------------
+    function lift(colorValue, amount) {
+        return Qt.rgba(Math.min(1, colorValue.r + amount), Math.min(1, colorValue.g + amount),
+                        Math.min(1, colorValue.b + amount), colorValue.a)
+    }
+    // Bar and drawer sit one tonal step above the page so the strip reads as
+    // chrome without an outline.
+    readonly property color bar: Theme.lightMode ? Qt.darker(Theme.shell, 1.05) : lift(Theme.shell, 0.055)
+    readonly property color drawer: Theme.lightMode ? Qt.darker(Theme.shell, 1.03) : lift(Theme.shell, 0.035)
+    readonly property color panelTint: Theme.lightMode ? Qt.rgba(0, 0, 0, 0.04) : lift(Theme.shell, 0.02)
+    // Hairline ink for borders between flat surfaces (the int above is a width).
+    readonly property color edgeInk: Theme.lightMode ? Qt.rgba(0, 0, 0, 0.16) : "#1FFFFFFF"
+    readonly property color tileFallback: Theme.lightMode ? "#E4E4E4" : "#1E1E1E"
+    readonly property int barHeight: px(52)
+    readonly property int drawerWidth: px(264)
+    readonly property int navWidth: px(200)
+    readonly property int navItemHeight: px(44)
+    readonly property int readingWidth: px(760)
+    readonly property int accentBarWidth: px(3)
+    readonly property int tileRadius: px(6)
+    // Shelf tiles are wider than the 16:9 capsule art they crop.
+    readonly property real shelfAspect: 1.94
+    readonly property int shelfGap: px(16)
+    readonly property int shelfHeaderHeight: px(34)
+    readonly property int settingsRowHeight: px(56)
+
+    // "99h 50m" — hours that roll over into minutes, never a raw decimal.
+    function durationLabel(hours) {
+        const totalMinutes = Math.max(0, Math.round((Number(hours) || 0) * 60))
+        const wholeHours = Math.floor(totalMinutes / 60)
+        const minutes = totalMinutes % 60
+        return minutes > 0 ? wholeHours + "h " + minutes + "m" : wholeHours + "h"
+    }
+
+    // Shelf badge: a discount when the catalog reports one. Nothing else is
+    // invented, so a tile without an offer simply has no badge.
+    function storeBadge(game) {
+        if (!game)
+            return ""
+        if (game.storeDiscount !== undefined && game.storeDiscount !== null)
+            return String(game.storeDiscount)
+        if (game.discount !== undefined && game.discount !== null)
+            return String(game.discount)
+        return ""
+    }
+
+    function relativeMs(timestampMs, nowMs) {
+        const value = Number(timestampMs)
+        if (!Number.isFinite(value) || value <= 0)
+            return ""
+        return relativeLastPlayed(new Date(value).toISOString(), nowMs)
+    }
+
+    // Membership tiers arrive as ids ("PERFORMANCE"); copy reads better in
+    // sentence case without touching the value that settings compare against.
+    function displayCase(value) {
+        const text = String(value || "")
+        return text.length === 0 ? text : text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
+    }
+    readonly property real cardHoverScale: 1.02
     readonly property int cardOutlinePad: 2
     readonly property color cardOutlineIdle: Theme.seam
+    readonly property color cardOutlineFocus: Theme.focus
 
     function px(value) {
         return Math.max(1, Math.round(Number(value) * uiScale))

@@ -36,7 +36,7 @@ QtObject {
             check(!Theme.accentOverridden && Theme.focus === Theme.packAccent, "pack accent restored")
         }
         screen.setChoice("themePack", light ? "bone" : "aurora")
-        if (!light) find(parent, "themeAccent-violet").clicked()
+        if (!light) find(parent, "themeAccent-silver").clicked()
         ShellStore.lastError = ""
         return true
     }

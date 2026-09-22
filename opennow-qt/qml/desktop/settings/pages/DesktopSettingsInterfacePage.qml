@@ -18,8 +18,8 @@ DesktopSettingsPanel {
         onSelected: value => page.settingsScreen.setChoice("appLanguage",value)
     }
     DesktopSettingsRow {
-        width: parent.width; paperStyle: true; glyph: "sidebar"; title: qsTr("Collapsed sidebar")
-        description: qsTr("Show icons only · Ctrl B toggles")
+        width: parent.width; paperStyle: true; glyph: "sidebar"; title: qsTr("Collapsed navigation")
+        description: qsTr("Close the navigation drawer · Ctrl B toggles")
         DesktopSettingsToggle { checked: page.settingsScreen.boolSetting("desktopRailCollapsed",true); onValueChangedByUser: value => page.settingsScreen.setSetting("desktopRailCollapsed",value) }
     }
     DesktopSettingsRow {

@@ -42,7 +42,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: 16
-        color: "#0B0F1A"
+        color: "#0D0D0D"
     }
 
     Rectangle {
@@ -180,7 +180,7 @@ Item {
             }
             contentItem: Text {
                 text: playButton.text
-                color: "#0B0F1A"
+                color: "#0D0D0D"
                 font.family: Theme.bodyFont
                 font.pixelSize: DesktopTokens.captionSize
                 font.weight: Font.ExtraBold

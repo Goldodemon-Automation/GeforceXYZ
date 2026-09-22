@@ -26,7 +26,7 @@ Rectangle {
         fillMode: Image.PreserveAspectCrop
         sourceSize: Qt.size(Math.ceil(width), Math.ceil(height))
         asynchronous: true
-        opacity: status === Image.Ready ? 0.58 : 0
+        opacity: status === Image.Ready ? 0.50 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.enterDuration } }
     }
     Rectangle {
@@ -41,8 +41,10 @@ Rectangle {
     Rectangle {
         anchors.fill: parent
         color: root.tint
-        opacity: 0.12
+        opacity: 0.10
     }
+    // A gold wash under the chrome. It is the only warmth the backdrop adds,
+    // so the accent reads as light rather than decoration.
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -50,7 +52,7 @@ Rectangle {
         height: Math.round(parent.height * 0.4)
         gradient: Gradient {
             orientation: Gradient.Vertical
-            GradientStop { position: 0; color: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.07) }
+            GradientStop { position: 0; color: Qt.rgba(Theme.focus.r, Theme.focus.g, Theme.focus.b, 0.10) }
             GradientStop { position: 1; color: "transparent" }
         }
     }

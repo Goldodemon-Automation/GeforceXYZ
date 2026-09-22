@@ -189,7 +189,7 @@ FocusScope {
             width: keyText.implicitWidth + DesktopTokens.px(16)
             height: DesktopTokens.px(action.primary ? 32 : 22)
             radius: DesktopTokens.px(6)
-            color: action.primary ? "#0B0F1A" : DesktopTokens.raised
+            color: action.primary ? "#0D0D0D" : DesktopTokens.raised
             Text {
                 id: keyText
                 anchors.centerIn: parent
@@ -206,7 +206,7 @@ FocusScope {
     component Card: Rectangle {
         default property alias content: contents.data
         implicitHeight: contents.implicitHeight + 2
-        color: Theme.lightMode ? Theme.glass : "#C70B0F1A"
+        color: Theme.lightMode ? Theme.glass : "#C70D0D0D"
         radius: DesktopTokens.px(16)
         border.color: Theme.seam
         Column {
@@ -245,7 +245,7 @@ FocusScope {
     Rectangle {
         anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
         height: DesktopTokens.px(96)
-        color: Theme.lightMode ? "#B8EDF3F8" : "#660B0F1A"
+        color: Theme.lightMode ? "#B8EDF3F8" : "#660D0D0D"
         Rectangle { width: parent.width; height: 1; color: DesktopTokens.seamSoft }
     }
 
@@ -750,7 +750,7 @@ FocusScope {
                         anchors.right: parent.right; anchors.rightMargin: -DesktopTokens.px(14)
                         y: -DesktopTokens.px(24); width: DesktopTokens.px(75); height: DesktopTokens.px(38)
                         radius: DesktopTokens.px(6); rotation: -7
-                        color: Theme.lightMode ? Theme.glass : "#DB0B0F1A"; border.color: root.amber; border.width: 2
+                        color: Theme.lightMode ? Theme.glass : "#DB0D0D0D"; border.color: root.amber; border.width: 2
                         Rectangle { anchors.fill: parent; anchors.margins: DesktopTokens.px(4); radius: DesktopTokens.px(3); color: "transparent"; border.color: root.amber }
                         Eyebrow { anchors.centerIn: parent; text: qsTr("BETA"); color: root.amber; font.pixelSize: DesktopTokens.px(14) }
                     }

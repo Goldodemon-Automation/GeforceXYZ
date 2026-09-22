@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenNOW — Black / White / Gold</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Inter:wght@300..800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Palette — one metallic accent, everything else on the black/white axis */
+    --black: #0D0D0D;
+    --black-2: #141414;
+    --black-3: #1A1A1A;
+    --black-4: #1F1F1F;
+    --white: #FFFFFF;
+    --grey: #2E2E2E;
+    --grey-soft: #8A8A8A;
+    --off-white: #EDEDED;
+    --gold: #FFD34D;
+    --gold-bright: #FFD34D;
+    --gold-mid: #C9A227;
+    --gold-deep: #8A6D1B;
+    --ink-on-gold: #0D0D0D;
+    --danger: #F87171;
+    --danger-deep: #B3261E;
+
+    --seam: rgba(255, 255, 255, 0.16);
+    --seam-soft: rgba(255, 255, 255, 0.08);
+    --raised: rgba(255, 255, 255, 0.06);
+    --raised-strong: rgba(255, 255, 255, 0.10);
+    /* Grey text ramp on black */
+    --label: #EDEDED;
+    --muted: #8A8A8A;
+    --faint: #5F5F5F;
+    --dim: #2E2E2E;
+
+    /* Geometry */
+    --r-panel: 20px;
+    --r-card: 14px;
+    --r-control: 10px;
+    --space-xs: 6px;
+    --space-sm: 10px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 36px;
+
+    --display: "Outfit", "Plus Jakarta Sans", -apple-system, "SF Pro Display", "Segoe UI", sans-serif;
+    --body: "Inter", -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--black);
+    color: var(--label);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display { font-family: var(--display); font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+  h1 { font-size: 42px; }
+  h2 { font-size: 18px; letter-spacing: 0.02em; }
+  h3 { font-size: 26px; color: var(--label); }
+  .mono {
+    font-family: var(--body);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .eyebrow {
+    font-family: var(--body);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px var(--space-lg) 96px; }
+  section { margin-top: 64px; }
+  .rule { height: 1px; background: var(--seam); margin: var(--space-lg) 0; }
+  .lede { color: var(--muted); max-width: 68ch; margin-top: var(--space-sm); }
+  .stack { display: grid; gap: var(--space-lg); }
+
+  /* Panels */
+  .panel {
+    background: rgba(13, 13, 13, 0.72);
+    border: 1px solid var(--seam);
+    border-radius: var(--r-panel);
+    padding: var(--space-lg);
+    position: relative;
+  }
+  .panel::before {
+    content: "";
+    position: absolute; inset: 1px 1px auto 1px; height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02));
+    border-radius: var(--r-panel) var(--r-panel) 0 0;
+  }
+  .panel.accent { border-color: rgba(255, 211, 77, 0.42); }
+
+  /* Swatches */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-sm); }
+  .swatch { border: 1px solid var(--seam); border-radius: var(--r-card); overflow: hidden; background: var(--black-2); }
+  .swatch .chip { height: 76px; }
+  .swatch .meta { padding: 10px 12px; display: flex; justify-content: space-between; gap: 8px; }
+  .swatch .name { font-size: 13px; font-weight: 600; }
+  .swatch .hex { color: var(--faint); font-variant-numeric: tabular-nums; font-size: 11px; }
+
+  /* Buttons */
+  .row { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; }
+  .btn {
+    appearance: none; cursor: default;
+    font-family: var(--body); font-size: 14px; font-weight: 700;
+    padding: 10px 20px; border-radius: 999px;
+    border: 1px solid var(--seam);
+    background: var(--raised); color: var(--label);
+  }
+  .btn.primary { background: var(--gold); border-color: transparent; color: var(--ink-on-gold); }
+  .btn.ghost { background: transparent; }
+  .btn.danger { background: rgba(248, 113, 113, 0.12); border-color: rgba(248, 113, 113, 0.34); color: var(--danger); }
+  .btn.focus { border-color: var(--gold);    box-shadow: 0 0 0 3px rgba(255, 211, 77, 0.24); }
+  .key {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px; padding: 0 6px;
+    border: 1px solid var(--seam); border-radius: 6px;
+    font-size: 10px; font-weight: 700; color: var(--muted); background: var(--raised);
+  }
+  .key.on-gold { border-color: rgba(13,13,13,0.35); color: rgba(13,13,13,0.72); background: rgba(13,13,13,0.08); }
+  .toggle { width: 54px; height: 30px; border-radius: 999px; background: var(--raised); border: 1px solid var(--seam); position: relative; }
+  .toggle i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--label); }
+  .toggle.on { background: var(--gold); border-color: transparent; }
+  .toggle.on i { left: 27px; background: var(--ink-on-gold); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px; border-radius: 999px; background: var(--raised-strong);
+    border: 1px solid var(--seam); font-size: 12px; font-weight: 700;
+  }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+  .chip-sq {
+    width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+    border: 1px solid rgba(255,255,255,0.55); font-size: 12px; font-weight: 800;
+    background: var(--grey); color: var(--white);
+  }
+
+  /* Layout mock frames
+     The two layout mocks are drawn at their real design width and scroll
+     horizontally in a narrow pane rather than squashing into an unreadable
+     shape. */
+  .mock {
+    border: 1px solid var(--seam); border-radius: var(--r-panel);
+    background: var(--black);
+    overflow: hidden;
+    container-type: inline-size;
+  }
+  /* The 1040px design frame scales down to whatever width the pane offers, so
+     the whole layout stays reviewable instead of being cropped. */
+  .console, .desktop { zoom: var(--frame-scale, 1); }
+
+  /* Console (controller) layout */
+  .console { aspect-ratio: 16 / 9; min-width: 1040px; position: relative; padding: var(--space-lg);
+    background:
+      radial-gradient(120% 90% at 20% -10%, rgba(255, 211, 77, 0.10), transparent 60%),
+      linear-gradient(180deg, #101010, #0D0D0D 55%, #101010);
+  }
+  .chrome { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); }
+  .chrome .pill {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(13,13,13,0.94); border: 1px solid var(--seam);
+    border-radius: 16px; padding: 8px 14px; height: 52px;
+  }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--gold); color: var(--ink-on-gold);
+    display: grid; place-items: center; font-family: var(--display); font-weight: 800; border: 1px solid rgba(255,255,255,0.22); }
+  .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+  .console-center { display: flex; align-items: center; justify-content: center; height: calc(100% - 150px); padding: var(--space-lg) 0; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; max-width: 780px; }
+  .tile {
+    position: relative; aspect-ratio: 16 / 10; border-radius: var(--r-card);
+    background: linear-gradient(150deg, #303030, #1A1A1A 70%);
+    border: 1px solid var(--seam-soft);
+    display: flex; align-items: flex-end; padding: 12px;
+  }
+  .tile.wide { grid-column: span 2; }
+  .tile.focused { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255, 211, 77, 0.32), 0 14px 30px rgba(0,0,0,0.55); transform: translateY(-2px); }
+  .tile .title { font-family: var(--display); font-weight: 800; font-size: 15px; }
+  .tile .sub { position: absolute; top: 10px; left: 10px; }
+  .console-bottom { position: absolute; left: var(--space-lg); right: var(--space-lg); bottom: var(--space-lg); display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-md); }
+  .hintbar { background: rgba(13,13,13,0.94); border: 1px solid var(--seam); border-radius: 16px; padding: 10px 16px; display: grid; gap: 7px; }
+  .hint { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--label); }
+  .navpill {
+    background: rgba(13,13,13,0.94); border: 1px solid var(--seam); border-radius: 18px;
+    height: 68px; padding: 0 14px; display: flex; align-items: center; gap: 4px;
+  }
+  .navpill .dest { width: 76px; display: grid; justify-items: center; gap: 5px; }
+  .navpill .glyph { width: 26px; height: 26px; border-radius: 7px; background: var(--raised-strong); }
+  .navpill .bar { width: 30px; height: 2px; border-radius: 1px; background: transparent; }
+  .navpill .dest.active .bar { background: var(--gold); }
+  .navpill .dest.active .glyph { background: rgba(255, 211, 77, 0.16); border: 1px solid rgba(255, 211, 77, 0.42); }
+  .navpill .dest span { font-size: 10px; font-weight: 700; color: var(--muted); }
+  .navpill .dest.active span { color: var(--label); }
+
+  /* Desktop layout */
+  .desktop { aspect-ratio: 16 / 9; min-width: 1040px; display: grid; grid-template-columns: 232px 1fr; background: var(--black); }
+  .rail { border-right: 1px solid var(--seam); padding: var(--space-md) 14px; display: flex; flex-direction: column; gap: var(--space-sm); }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
+  .brand .mark { width: 30px; height: 18px; border: 2px solid var(--gold); border-radius: 4px; }
+  .navitem { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--r-control); font-size: 14px; font-weight: 600; color: var(--muted); }
+  .navitem .icon { width: 18px; height: 18px; border-radius: 5px; background: var(--raised-strong); }
+  .navitem.active { background: var(--raised-strong); color: var(--label); font-weight: 800; }
+  .navitem.active .marker { margin-left: auto; width: 3px; height: 16px; border-radius: 999px; background: var(--gold); }
+  .rail-split { height: 1px; background: var(--seam-soft); margin: var(--space-xs) 0; }
+  .stage { padding: var(--space-lg); display: grid; gap: var(--space-md); align-content: start; }
+  .hero {
+    position: relative; border-radius: 16px; overflow: hidden; min-height: 210px;
+    border: 1px solid var(--seam);
+    background: linear-gradient(100deg, rgba(13,13,13,0.94) 6%, rgba(13,13,13,0.42) 62%, rgba(13,13,13,0.80)),
+                linear-gradient(150deg, #3A3A3A, #141414 75%);
+    padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px;
+  }
+  .hero .actions { display: flex; gap: 9px; }
+  .posters { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .poster { aspect-ratio: 132 / 198; border-radius: 12px; border: 1px solid var(--seam-soft);
+    background: linear-gradient(150deg, #343434, #171717 70%); position: relative; }
+  .poster.focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(255, 211, 77, 0.35); }
+  .poster .play { position: absolute; left: 8px; right: 8px; bottom: 8px; height: 30px; border-radius: 8px;
+    background: var(--gold); color: var(--ink-on-gold); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+  .section-label { display: flex; justify-content: space-between; align-items: baseline; }
+  .section-label .see { color: var(--muted); font-size: 12px; font-weight: 700; }
+
+  /* Ramp table */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--seam-soft); vertical-align: baseline; }
+  th { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 700; }
+  td.role { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .caption { color: var(--faint); font-size: 12px; margin-top: var(--space-sm); }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-lg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">OpenNOW · design reference</p>
+  <h1>Black · Grey text · Gold Bright</h1>
+  <p class="lede">
+    Black carries the interface, a three-step grey ramp carries the words, and a single bright gold
+    carries every point of attention. Every surface, control, and focus state on this page is drawn
+    from the values the app's own theme tokens use, so the same decisions apply to the controller
+    layout and to the desktop layout.
+  </p>
+
+  <section>
+    <h2>Palette</h2>
+    <div class="rule"></div>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#0D0D0D"></div><div class="meta"><span class="name">Black · UI</span><span class="hex">#0D0D0D</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#141414"></div><div class="meta"><span class="name">Graphite</span><span class="hex">#141414</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#2E2E2E"></div><div class="meta"><span class="name">Dark grey · chrome</span><span class="hex">#2E2E2E</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#5F5F5F"></div><div class="meta"><span class="name">Grey · captions</span><span class="hex">#5F5F5F</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#8A8A8A"></div><div class="meta"><span class="name">Mid grey · body</span><span class="hex">#8A8A8A</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#EDEDED"></div><div class="meta"><span class="name">Ink · primary text</span><span class="hex">#EDEDED</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#FFD34D"></div><div class="meta"><span class="name">Gold bright · accent</span><span class="hex">#FFD34D</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#C9A227"></div><div class="meta"><span class="name">Gold mid</span><span class="hex">#C9A227</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#8A6D1B"></div><div class="meta"><span class="name">Gold deep · light mode</span><span class="hex">#8A6D1B</span></div></div>
+    </div>
+    <p class="caption">
+      Gold bright marks exactly one thing per screen: the primary action, the current selection, or
+      the focused surface. Text steps through grey — off-white for what you read, mid grey for what
+      supports it, and dark grey only for chrome such as dividers and inactive glyphs, never for
+      words on black. Content — game artwork and screenshots — keeps its own colours; only the
+      interface is monochrome.
+    </p>
+  </section>
+
+  <section>
+    <h2>Type</h2>
+    <div class="rule"></div>
+    <table>
+      <thead><tr><th>Role</th><th>Sample</th><th>Size / weight</th></tr></thead>
+      <tbody>
+        <tr><td class="role">displayFont</td><td><span style="font-family:var(--display);font-size:28px;font-weight:800">Continue playing</span></td><td class="role">28 · 800 · Outfit</td></tr>
+        <tr><td class="role">headingSize</td><td><span style="font-family:var(--display);font-size:18px;font-weight:700">Jump back in</span></td><td class="role">18 · 700 · Outfit</td></tr>
+        <tr><td class="role">bodySize</td><td><span style="font-size:15px">Library synced from your NVIDIA account</span></td><td class="role">15 · 400 · Inter</td></tr>
+        <tr><td class="role">captionSize</td><td><span style="font-size:13px;color:var(--muted)">Playable with your current membership</span></td><td class="role">13 · 500 · Inter</td></tr>
+        <tr><td class="role">smallSize</td><td><span class="mono" style="font-size:11px">1920 × 1080 · 60 FPS</span></td><td class="role">11 · 600 · Inter</td></tr>
+        <tr><td class="role">eyebrow</td><td><span class="eyebrow">Continue playing</span></td><td class="role">10 · 700 · tracked</td></tr>
+      </tbody>
+    </table>
+    <p class="caption">
+      Outfit carries headings and numerals that need presence; Inter carries everything you read at
+      length, including statistics (tabular figures keep columns aligned without a third typeface).
+    </p>
+  </section>
+
+  <section>
+    <h2>Controls</h2>
+    <div class="rule"></div>
+    <div class="grid-2">
+      <div class="panel accent">
+        <p class="eyebrow">Actions</p>
+        <div class="row" style="margin-top:14px">
+          <span class="btn primary">Start <span class="key on-gold">Enter</span></span>
+          <span class="btn">Details</span>
+          <span class="btn focus">Focused <span class="key">Space</span></span>
+          <span class="btn ghost">Quiet</span>
+          <span class="btn danger">End session</span>
+        </div>
+        <p class="caption">One gold button per screen. A gold 2&nbsp;px ring plus a soft gold glow marks keyboard and controller focus on any surface.</p>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">State &amp; identity</p>
+        <div class="row" style="margin-top:14px">
+          <span class="badge"><span class="dot"></span> Connected</span>
+          <span class="badge"><span class="dot" style="background:var(--danger)"></span> Unstable</span>
+          <span class="toggle on"><i></i></span>
+          <span class="toggle"><i></i></span>
+          <span class="chip-sq">S</span>
+          <span class="chip-sq" style="background:#363636">E</span>
+          <span class="chip-sq" style="background:#262626">X</span>
+          <span class="chip-sq" style="background:#3A3A3A">G</span>
+        </div>
+        <p class="caption">Status uses gold for healthy and a single desaturated red for problems, so the two never sit side by side as a colourblind trap. Store marks are neutral chips distinguished by glyph.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Controller layout</h2>
+    <div class="rule"></div>
+    <div class="mock">
+      <div class="console">
+        <div class="chrome">
+          <div class="pill">
+            <span class="avatar">G</span>
+            <strong style="font-size:15px">Goldodemon</strong>
+            <span class="pip"></span>
+            <span style="font-size:15px;font-weight:700">Connected</span>
+            <span class="key">LT</span>
+          </div>
+          <div class="pill" style="padding-left:22px;padding-right:22px">
+            <span style="font-family:var(--display);font-size:19px;font-weight:800">My games</span>
+          </div>
+          <div class="pill">
+            <span class="key">RT</span>
+            <span class="pip"></span>
+            <span style="font-size:15px;font-weight:700">Automatic region</span>
+            <span style="opacity:0.3">|</span>
+            <span class="mono" style="font-size:13px">21:40 | 09/19</span>
+            <span style="opacity:0.3">|</span>
+            <span style="font-size:15px;font-weight:800">88%</span>
+          </div>
+        </div>
+
+        <div class="console-center">
+          <div class="tiles">
+            <div class="tile wide focused">
+              <div class="sub"><span class="chip-sq" style="background:#262626">S</span></div>
+              <div>
+                <div class="eyebrow" style="color:rgba(255,255,255,0.72)">Continue</div>
+                <div class="title">Dead by Daylight</div>
+              </div>
+              <span class="key" style="position:absolute;right:12px;bottom:12px;background:var(--gold);border-color:transparent;color:var(--ink-on-gold)">A</span>
+            </div>
+            <div class="tile"><div class="sub"><span class="chip-sq" style="background:#363636">E</span></div><div class="title">Sable</div></div>
+            <div class="tile"><div class="sub"><span class="chip-sq" style="background:#262626">X</span></div><div class="title">Forza</div></div>
+            <div class="tile"><div class="sub"><span class="chip-sq" style="background:#3A3A3A">G</span></div><div class="title">Cyberpunk</div></div>
+            <div class="tile"><div class="sub"><span class="chip-sq" style="background:#444;color:var(--ink-on-gold)">+</span></div><div class="title" style="color:var(--muted)">Add a game</div></div>
+          </div>
+        </div>
+
+        <div class="console-bottom">
+          <div class="hintbar">
+            <span class="hint"><span class="key">Y</span> Search</span>
+            <span class="hint"><span class="key">VIEW</span> Details</span>
+          </div>
+          <div class="navpill">
+            <span class="key">LB</span>
+            <span class="dest active"><span class="glyph"></span><span class="bar"></span><span>Home</span></span>
+            <span class="dest"><span class="glyph"></span><span class="bar"></span><span>Library</span></span>
+            <span class="dest"><span class="glyph"></span><span class="bar"></span><span>Store</span></span>
+            <span class="dest"><span class="glyph"></span><span class="bar"></span><span>Friends</span></span>
+            <span class="dest"><span class="glyph"></span><span class="bar"></span><span>Settings</span></span>
+            <span class="key">RB</span>
+          </div>
+          <div class="hintbar">
+            <span class="hint"><span class="key">A</span> Play</span>
+            <span class="hint"><span class="key">MENU</span> Menu</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">
+      Console chrome is three identical pills on a black stage, each with a hairline seam and a lit
+      top edge. The focused tile lifts 2&nbsp;px inside a gold ring; the dock underlines the current
+      destination in gold and nothing else.
+    </p>
+  </section>
+
+  <section>
+    <h2>Desktop layout</h2>
+    <div class="rule"></div>
+    <div class="mock">
+      <div class="desktop">
+        <div class="rail">
+          <div class="brand"><span class="mark"></span> OpenNOW</div>
+          <div class="rail-split"></div>
+          <div class="navitem active"><span class="icon"></span> Home <span class="marker"></span></div>
+          <div class="navitem"><span class="icon"></span> Library</div>
+          <div class="navitem"><span class="icon"></span> Store</div>
+          <div class="navitem"><span class="icon"></span> Friends</div>
+          <div class="navitem"><span class="icon"></span> Settings</div>
+          <div class="rail-split"></div>
+          <div class="navitem" style="color:var(--faint);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;height:auto">Collections</div>
+          <div class="navitem"><span class="icon"></span> Co-op night <span class="mono" style="margin-left:auto;color:var(--faint)">4</span></div>
+          <div class="rail-split" style="margin-top:auto"></div>
+          <div class="navitem"><span class="icon"></span> Console mode <span class="toggle on" style="width:32px;height:19px;margin-left:auto"><i style="width:13px;height:13px;left:16px"></i></span></div>
+          <div class="navitem"><span class="avatar" style="width:36px;height:36px;font-size:14px">G</span> Goldodemon</div>
+        </div>
+        <div class="stage">
+          <div class="hero">
+            <p class="eyebrow">Continue playing</p>
+            <h3>Dead by Daylight</h3>
+            <span style="color:var(--muted);font-size:13px;font-weight:600">Steam · 1440p · last played 2 hours ago</span>
+            <div class="actions">
+              <span class="btn primary">▶ Start <span class="key on-gold">Enter</span></span>
+              <span class="btn">Details</span>
+              <span class="badge" style="background:rgba(0,0,0,0.35)"><span class="dot"></span> CLOUD SEAT READY</span>
+            </div>
+          </div>
+          <div class="section-label">
+            <h3 style="font-size:16px">Jump back in</h3>
+            <span class="see">See all 128 ›</span>
+          </div>
+          <div class="posters">
+            <div class="poster focus"><div class="play">▶ Play</div></div>
+            <div class="poster"></div>
+            <div class="poster"></div>
+            <div class="poster"></div>
+            <div class="poster"></div>
+            <div class="poster"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">
+      Desktop keeps the same vocabulary at pointer scale: hairline seams instead of drop shadows,
+      10&nbsp;px control radii, a gold 3&nbsp;px marker beside the active rail item, and a gold Play
+      affordance on the poster under the cursor.
+    </p>
+  </section>
+
+  <section>
+    <h2>Rules of the system</h2>
+    <div class="rule"></div>
+    <div class="grid-2">
+      <div class="panel">
+        <p class="eyebrow">Do</p>
+        <ul style="color:var(--muted);padding-left:18px;margin:12px 0 0">
+          <li>Baseline every surface on black; separate with a 1&nbsp;px seam, not a shadow.</li>
+          <li>Reserve gold bright for one primary action, the current selection, and focus.</li>
+          <li>Step text through grey: off-white, mid grey, then grey for captions.</li>
+          <li>Use Outfit for headings and Inter for everything else.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">Don't</p>
+        <ul style="color:var(--muted);padding-left:18px;margin:12px 0 0">
+          <li>Introduce a second accent colour, or mix in purple, orange, or neon pairings.</li>
+          <li>Put red and green in the same view; use gold for healthy, red only for faults.</li>
+          <li>Use a coloured hue to distinguish store marks — the glyph does that.</li>
+          <li>Set body copy in dark grey on black (1.5:1). It stays chrome-only.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  // Keep the two layout frames fully visible at any pane width.
+  const DESIGN_WIDTH = 1040;
+  const fit = () => {
+    for (const frame of document.querySelectorAll(".mock")) {
+      const scale = Math.min(1, frame.clientWidth / DESIGN_WIDTH);
+      const inner = frame.firstElementChild;
+      if (inner) inner.style.setProperty("--frame-scale", scale.toFixed(3));
+    }
+  };
+  new ResizeObserver(fit).observe(document.documentElement);
+  fit();
+</script>
+</body>
+</html>

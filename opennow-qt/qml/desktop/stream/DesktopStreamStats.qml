@@ -25,12 +25,13 @@ Item {
         : expanded ? (panel.x + panel.width > width - 408 ? panel.y + panel.height + 12 : inset)
         : Math.max(compact.x + compact.width > width - 408 ? compact.y + compact.height + 12 : inset,
             clockPill.visible && clockPill.x + clockPill.width > width - 408 ? clockPill.y + clockPill.height + 12 : inset)
-    readonly property color surface: Qt.rgba(14 / 255, 16 / 255, 24 / 255,
+    readonly property color surface: Qt.rgba(13 / 255, 13 / 255, 13 / 255,
         Math.max(0.4, Math.min(1, Number(ShellStore.settings.statsOverlayOpacity || 85) / 100)))
     readonly property bool degraded: telemetryActive && read("packetLossPercent") > 0
     readonly property bool healthKnown: telemetryActive && read("packetLossPercent") !== null
-    readonly property color accent: degraded ? "#F5A623" : "#6EE7B7"
-    readonly property color statusColor: !healthKnown || degraded ? "#F5A623" : "#1DB954"
+    // Health reads as gold versus the single danger ink.
+    readonly property color accent: degraded ? Theme.coral : Theme.focus
+    readonly property color statusColor: !healthKnown || degraded ? Theme.coral : Theme.focus
     readonly property color metricColor: degraded ? accent : "white"
     readonly property string healthText: !telemetryActive ? qsTr("Waiting for stream")
         : degraded ? qsTr("Connection unstable") : healthKnown ? qsTr("Stream healthy") : qsTr("Stream statistics")
@@ -44,9 +45,9 @@ Item {
         && (card.key !== "Drops" || card.field === "videoDropCount" || card.value > 0))
     readonly property var featureBadges: {
         const badges = []
-        if (shown("Video") && (profile.enableHdr === true || profile.hdr === true)) badges.push({text:"HDR", ink:"#C6A46A"})
-        if (frameGenerationEnabled) badges.push({text:qsTr("FRAME GEN 2×"), ink:"#F5A623"})
-        if (shown("Video") && Qt.platform.os === "osx" && ShellStore.settings.upscaling === "metalfx") badges.push({text:"METALFX", ink:"#7FD4FF"})
+        if (shown("Video") && (profile.enableHdr === true || profile.hdr === true)) badges.push({text:"HDR", ink:Theme.focus})
+        if (frameGenerationEnabled) badges.push({text:qsTr("FRAME GEN 2×"), ink:Theme.focus})
+        if (shown("Video") && Qt.platform.os === "osx" && ShellStore.settings.upscaling === "metalfx") badges.push({text:"METALFX", ink:Theme.focus})
         return badges
     }
     readonly property bool telemetryActive: live.status === "streaming"
@@ -380,7 +381,7 @@ Item {
                             Mono {
                                 text: root.format(ledger.modelData.value, ledger.modelData.decimals)
                                     + (ledger.modelData.field === "videoDropCount" ? "" : ledger.modelData.unit === "%" ? "%" : " " + ledger.modelData.unit)
-                                color: root.degraded && ledger.modelData.key === "PacketLoss" ? "#D15A2C"
+                                color: root.degraded && ledger.modelData.key === "PacketLoss" ? Theme.coral
                                     : ledger.modelData.key === "Decode" ? "white" : root.metricColor
                             }
                         }

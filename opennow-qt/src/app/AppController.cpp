@@ -528,6 +528,7 @@ const QStringList &AppController::routes()
         u"controllers"_s,
         u"settings"_s,
         u"settings-account"_s,
+        u"settings-stores"_s,
         u"settings-streaming"_s,
         u"settings-audio"_s,
         u"settings-console"_s,

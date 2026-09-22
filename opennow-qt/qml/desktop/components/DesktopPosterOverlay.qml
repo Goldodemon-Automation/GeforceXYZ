@@ -20,7 +20,7 @@ Column {
         width: parent.width
         height: 32
         radius: 8
-        color: "#F2FFFFFF"
+        color: Theme.focus
 
         Row {
             anchors.centerIn: parent
@@ -38,7 +38,7 @@ Column {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: qsTr("Play")
-                color: "#0B0F1A"
+                color: Theme.focusText
                 font.family: DesktopTokens.bodyFont
                 font.pixelSize: 12
                 font.weight: Font.Bold

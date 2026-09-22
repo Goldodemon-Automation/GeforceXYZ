@@ -1,168 +1,139 @@
 <p align="center">
-  <img src="opennow-qt/res/brand/opennow-mark.png" alt="OpenNOW cloud logo" width="96" height="52" />
+  <img src="opennow-qt/res/brand/opennow-mark.png" alt="GeforceXYZ cloud logo" width="96" height="52" />
 </p>
 
-<h1 align="center">OpenNOW</h1>
+<h1 align="center">GeforceXYZ</h1>
 
-<p align="center"><strong>An open-source desktop client for GeForce NOW.</strong></p>
-
-<p align="center">
-  <a href="https://github.com/OpenCloudGaming/OpenNOW/releases"><img src="https://img.shields.io/badge/Download-Desktop_builds-56E6A5?style=for-the-badge&labelColor=101916" alt="Download desktop builds" /></a>
-    <a href="https://play.google.com/store/apps/details?id=com.opencloudgaming.opennow"><img src="https://img.shields.io/badge/Download-Android_app-56E6A5?style=for-the-badge&labelColor=101916" alt="Download Android Build" /></a>
-  <a href="https://opennow.zortos.me"><img src="https://img.shields.io/badge/Read_the-Docs-FFFFFF?style=for-the-badge&labelColor=101916" alt="Read the documentation" /></a>
-  <a href="https://discord.gg/8EJYaJcNfD"><img src="https://img.shields.io/badge/Join-Discord-5865F2?style=for-the-badge&labelColor=101916" alt="Join Discord" /></a>
-</p>
+<p align="center"><strong>A desktop client for GeForce NOW, built on the OpenNOW Qt app.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/OpenCloudGaming/OpenNOW/releases"><img src="https://img.shields.io/github/downloads/OpenCloudGaming/OpenNOW/total?style=for-the-badge&label=Downloads&color=56E6A5&labelColor=101916" alt="Total GitHub release downloads" /></a>
-  <a href="https://github.com/OpenCloudGaming/OpenNOW/stargazers"><img src="https://img.shields.io/github/stars/OpenCloudGaming/OpenNOW?style=for-the-badge&label=Stars&color=7FD4FF&labelColor=101916" alt="GitHub stars" /></a>
+  <img src="https://img.shields.io/badge/License-MIT-FFD34D?style=for-the-badge&labelColor=0D0D0D" alt="MIT license" />
+  <img src="https://img.shields.io/badge/Qt-6.8%2B-FFD34D?style=for-the-badge&labelColor=0D0D0D" alt="Qt 6.8 or newer" />
+  <img src="https://img.shields.io/badge/Core-Rust-FFD34D?style=for-the-badge&labelColor=0D0D0D" alt="Rust core" />
 </p>
 
 <p align="center">
-  <a href="#get-opennow">Downloads</a> ·
-  <a href="#inside-the-client">Features</a> ·
-  <a href="#how-it-works">Architecture</a> ·
-  <a href="#build-from-source">Build from source</a> ·
-  <a href="#contributing">Contribute</a>
+  <img src="https://img.shields.io/badge/Design-Black_Grey_Gold_Bright-FFD34D?style=for-the-badge&labelColor=0D0D0D" alt="Design system: black UI, grey text, gold bright accent" />
 </p>
 
-<p align="center">
-  <img src="docs/assets/readme/desktop-home.webp" alt="Paper design preview of current OpenNOW Home, with a compact sidebar, full-width continue-playing card, and favourites." width="100%" />
-</p>
-
-<p align="center"><em>Desktop Home, from the OpenNOW Paper design.</em></p>
-
-OpenNOW is a community-built GeForce NOW client. The desktop app uses Qt Quick for
-the interface and Rust for account services and streaming. Use a keyboard and mouse,
-or switch to the console layout for a controller. Both layouts run in the same app.
+GeforceXYZ is a personal fork of the community-built [OpenNOW](https://github.com/OpenCloudGaming/OpenNOW)
+client. The interface is Qt Quick, the account services and streaming engine are Rust, and it talks
+to your own GeForce NOW account. Use a keyboard and mouse, or switch to the console layout for a
+controller. Both layouts run in the same app.
 
 > [!NOTE]
-> OpenNOW 1.0.0 rebuilds the desktop client with Qt Quick and a native Rust streaming
-> engine. It replaces the retired Electron app. See the
-> [announcement post](https://x.com/Zortosdev/status/2093023076191440963) for a first look at the new UI.
+> This fork keeps OpenNOW's MIT license and upstream attribution. The product name, packaging, and
+> the visual design are the parts that differ. See [Credits](#credits).
 
 > [!IMPORTANT]
-> You need your own GeForce NOW account. Your subscription, region, and hardware
-> determine which games and stream settings you can use. OpenNOW is not affiliated
-> with, endorsed by, or sponsored by NVIDIA. NVIDIA and GeForce NOW are trademarks
-> of NVIDIA Corporation.
+> You need your own GeForce NOW account. Your subscription, region, and hardware determine which
+> games and stream settings you can use. GeforceXYZ is not affiliated with, endorsed by, or
+> sponsored by NVIDIA. NVIDIA and GeForce NOW are trademarks of NVIDIA Corporation.
 
 > [!WARNING]
-> The Qt app is still under development. Expect bugs, including platform-specific
-> streaming and GPU issues. It has no Chromium/WebRTC fallback. Publishing a build
-> does not mean it has passed every check in the [acceptance checklist](docs/qt-acceptance.md).
-
-## Get OpenNOW
-
-Look for packages starting with `OpenNOW-Qt-` in
-[GitHub Releases](https://github.com/OpenCloudGaming/OpenNOW/releases). Older releases
-may contain the retired Electron app, so check the release notes before downloading.
-If there's no published Qt nightly, sign in to GitHub and download the artifacts from a successful
-[`qt-ci` run on `dev`](https://github.com/OpenCloudGaming/OpenNOW/actions/workflows/qt-ci.yml?query=branch%3Adev).
-
-| Platform | Qt package | How to run it |
-| --- | --- | --- |
-| Windows x64 / ARM64 | `.msi`, portable `.zip` | Install the MSI, or extract the entire ZIP and run `bin/OpenNOW.exe`. |
-| Linux x64 / ARM64 | `.AppImage`, recommended | Make the file executable, then launch it. |
-| Linux x64 / ARM64 | `.deb` | Your distribution must provide Qt 6.8+ and SDL3. Use the AppImage on stock Ubuntu 24.04. |
-| macOS Apple Silicon, macOS 13+ | `.dmg`, nightlies | Open the DMG and drag OpenNOW into Applications. Intel Macs are not included. |
-
-Nightly platform packages are unsigned. Windows may show an unknown-publisher warning.
-The macOS app is not notarized; if Gatekeeper blocks it, use System Settings → Privacy &
-Security → Open Anyway when offered. Do not disable Gatekeeper globally.
-Published update-enabled nightlies use signed update manifests. Older builds without a
-pinned signing key need one manual upgrade. Checksums alone detect corrupted downloads;
-they do not verify who published a package.
-
-The [nightly guide](docs/qt-nightly-release.md) covers these packages. The signed
-1.0.0 candidate workflow currently builds Windows and Linux only; see the
-[release-candidate guide](docs/qt-release-candidate.md). The separate
-[OpenNOW-Mac](https://github.com/OpenCloudGaming/OpenNOW-Mac) project is also available.
-
-### Other platforms
-
-These projects are separate from the Qt desktop app.
-
-- Try the iOS beta through [TestFlight](https://testflight.apple.com/join/u1XPJKH2).
-  The SwiftUI prototype is on the [`kief5555/ios` branch](https://github.com/OpenCloudGaming/OpenNOW/tree/kief5555/ios/ios/OpenNOWiOS).
-- Get the Android app from [Google Play](https://play.google.com/store/apps/details?id=com.opencloudgaming.opennow).
-- Get [OpenNOW-Switch](https://github.com/OpenCloudGaming/OpenNOW-Switch/releases/latest)
-  for a modded Nintendo Switch. It runs as native Horizon OS homebrew.
+> The Qt app is still under development. Expect bugs, including platform-specific streaming and GPU
+> issues. It has no Chromium/WebRTC fallback. There are no published GeforceXYZ builds yet — build
+> from source.
 
 ## Inside the client
-
-These images come from the [OpenNOW Paper design](https://app.paper.design/file/01M11SPTRPMYQB9S9AX948A6WH/4-0).
-The boards follow the current Qt layouts, but they aren't app screenshots. The games,
-account details, and statistics are sample content, not proof of game availability or performance.
-
-### Desktop library
-
-![Paper design preview of the current desktop Library, showing the compact sidebar, collection controls, store filters, and larger game covers.](docs/assets/readme/desktop-library.webp)
-
-### Controller-first console layout
-
-![Paper design preview of console Home, showing a controller-focused game grid, navigation dock, and button prompts.](docs/assets/readme/console-home.webp)
-
-You can:
 
 - Browse the catalog, save favorites, and organize your library into collections.
 - Set the resolution, frame rate, bitrate, and codec your account and device support.
 - Open stream menus and statistics without leaving the video.
 - Take screenshots and record the source stream to Matroska files. Find both in Media.
 - Export a diagnostic report through Settings → About → Copy diagnostics when something breaks.
+- Run the same app as a desktop layout or as a controller-first console layout.
 
-The [Qt app guide](opennow-qt/README.md) lists hardware requirements, experimental
-features, and platform limitations.
+The Qt app guide in [`opennow-qt/README.md`](opennow-qt/README.md) lists hardware requirements,
+experimental features, and platform limitations.
+
+## Design
+
+This fork restyles both layouts onto one system: a black interface, a grey text ramp, and a single
+bright gold accent.
+
+| Role | Value |
+| --- | --- |
+| Surfaces | `#0D0D0D`, `#141414`, `#1A1A1A` |
+| Primary text | `#EDEDED` |
+| Secondary text | `#8A8A8A` |
+| Accent | `#FFD34D` |
+| Fault | `#F87171` |
+| Type | Outfit (display), Inter (body) |
+
+Gold marks exactly one thing per screen — the primary action, the current selection, or the focused
+surface. Theme packs keep their saved ids but are now tonal variants of the same black/white/gold
+family.
+
+The desktop layout is laid out like the cloud client it imitates: a full-width bar with the menu
+button, the page name, search, and the account chip; navigation in a drawer that opens below the
+bar; flat settings rows that read label-left, action-right; and shelves of wide artwork on the home
+page. Every name, tier, playtime figure, and connected-store line on those screens comes from your
+own account, never from a fixed list.
+
+- Visual reference: [`docs/design/black-white-gold.html`](docs/design/black-white-gold.html) (open
+  it in a browser, no build step)
+- Rules and token ownership: [`docs/design/README.md`](docs/design/README.md)
+- Tokens live in [`qml/theme/Theme.qml`](opennow-qt/qml/theme/Theme.qml) and
+  [`qml/desktop/components/DesktopTokens.qml`](opennow-qt/qml/desktop/components/DesktopTokens.qml)
+
+The screenshots under `docs/assets/readme/` come from upstream OpenNOW's Paper design and show the
+pre-restyle interface.
 
 ## How it works
 
-Qt draws the interface and handles windows, navigation, focus, and overlays.
-The Rust core runs in a separate process. It manages accounts, settings, and catalog
-requests, then prepares the session. Qt talks to it over a
-[versioned JSON protocol](docs/core-protocol.md).
+Qt draws the interface and handles windows, navigation, focus, and overlays. The Rust core runs in a
+separate process. It manages accounts, settings, and catalog requests, then prepares the session.
+Qt talks to it over a [versioned JSON protocol](docs/core-protocol.md).
 
-The native Rust streamer handles NVST transport, decoding, audio, gameplay input,
-and recording. Qt loads it in the desktop process through a
-[versioned C ABI](native/opennow-streamer/crates/opennow-streamer-ffi/README.md).
-Video stays on the GPU, and Qt draws menus over it in the same window. The app doesn't
-embed a browser or open a separate video window. The [streamer guide](native/opennow-streamer/README.md)
-explains the graphics backends and how Qt uses them.
+The native Rust streamer handles NVST transport, decoding, audio, gameplay input, and recording. Qt
+loads it in the desktop process through a
+[versioned C ABI](native/opennow-streamer/crates/opennow-streamer-ffi/README.md). Video stays on
+the GPU, and Qt draws menus over it in the same window. The app doesn't embed a browser or open a
+separate video window. The [streamer guide](native/opennow-streamer/README.md) explains the
+graphics backends and how Qt uses them.
 
 ## Build from source
 
-Use `main` for the release source or `dev` for ongoing development. Before building, install:
+Before building, install:
 
 - Qt 6.8+ with Quick, Multimedia, and ShaderTools.
 - CMake 3.24+ and a C++20 toolchain.
 - SDL3, Cargo, and the media dependencies for your platform.
 
-Linux also needs `pkg-config`, `libwayland-dev`, and `wayland-protocols`, even for
-X11 builds. Check the [build guide](opennow-qt/README.md#build) for platform-specific details.
+Linux also needs `pkg-config`, `libwayland-dev`, and `wayland-protocols`, even for X11 builds. Check
+the [Qt app guide](opennow-qt/README.md#build) for platform-specific details.
 
 ```sh
-git clone --branch main https://github.com/OpenCloudGaming/OpenNOW.git
-cd OpenNOW
+git clone https://github.com/Goldodemon-Automation/GeforceXYZ.git
+cd GeforceXYZ
 cmake -S opennow-qt -B build/opennow-qt -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/opennow-qt
 ctest --test-dir build/opennow-qt --output-on-failure
 ```
 
-You don't need Node.js or npm to build or run the desktop app. The repository uses
-JavaScript for tools such as the localization checker.
+The repository layout and CMake target names still use `opennow`, so the build produces
+`build/opennow-qt` and an `OpenNOW` executable. Renaming the binary is a separate change.
 
-Testing login and gameplay requires a GeForce NOW account. Without one, you can
-run the smoke tests, screenshot fixtures, and performance checks in the
-[Qt app guide](opennow-qt/README.md) and [acceptance runbook](docs/qt-acceptance.md).
+You don't need Node.js or npm to build or run the desktop app. The repository uses JavaScript for
+tools such as the localization checker:
+
+```sh
+npm run locales:check
+```
+
+Testing login and gameplay requires a GeForce NOW account. Without one, you can run the smoke tests,
+screenshot fixtures, and performance checks in the Qt app guide and the
+[acceptance runbook](docs/qt-acceptance.md).
 
 ## Documentation
 
-Start at [opennow.zortos.me](https://opennow.zortos.me) for setup and configuration help.
-
-| For players | For contributors |
+| Topic | Where |
 | --- | --- |
-| [Getting started](https://opennow.zortos.me/guides/getting-started/) | [Development guide](https://opennow.zortos.me/development/) |
-| [Configuration](https://opennow.zortos.me/reference/configuration/) | [Qt application](opennow-qt/README.md) |
-| [Native streamer](https://opennow.zortos.me/reference/native-streamer/) | [Protocol, release, and acceptance docs](docs/) |
+| Qt application | [`opennow-qt/README.md`](opennow-qt/README.md) |
+| Design system | [`docs/design/README.md`](docs/design/README.md) |
+| Protocol, release, and acceptance docs | [`docs/`](docs/) |
+| Upstream player and contributor docs | [opennow.zortos.me](https://opennow.zortos.me) |
 
 ### Repository map
 
@@ -170,37 +141,31 @@ Start at [opennow.zortos.me](https://opennow.zortos.me) for setup and configurat
 opennow-qt/               Qt Quick desktop app, C++ integration, and Qt tests
 native/opennow-core/      Rust accounts, settings, catalog, and session services
 native/opennow-streamer/  Native NVST transport, media, input, and Qt FFI
-locales/                 English source and Crowdin-managed translations
-docs/                    Architecture, protocols, acceptance, and release guides
-scripts/                 Repository-only localization tooling
-.github/                 CI workflows and contributor guidance
+locales/                  English source and Crowdin-managed translations
+docs/                     Architecture, protocols, acceptance, release, and design docs
+scripts/                  Repository-only localization tooling
+.github/                  CI workflows and contributor guidance
 ```
 
 ## Contributing
 
-For code changes, read the [contributing guide](.github/CONTRIBUTING.md) and
-[repository guidance](AGENTS.md). Keep pull requests focused on one change.
-For translations, edit only `locales/en.json`. Crowdin manages the other locale files.
+For code changes, read the contributing guide in
+[`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) and the repository guidance in
+[`AGENTS.md`](AGENTS.md). Keep changes focused on one thing.
 
-Found a bug? Open a [GitHub issue](https://github.com/OpenCloudGaming/OpenNOW/issues)
-with your build, OS, GPU, and steps to reproduce it. For streaming bugs, include a
-diagnostic export. Check attachments for personal information before posting them.
-You can also ask for help on [Discord](https://discord.gg/8EJYaJcNfD).
+For translations, edit only `locales/en.json`. Crowdin manages the other locale files, and untranslated
+strings fall back to English until they are synced.
 
-## Sponsors
+Found a bug? Open an issue with your build, OS, GPU, and steps to reproduce it. For streaming bugs,
+include a diagnostic export, and check attachments for personal information before posting them.
 
-[Blacksmith](https://www.blacksmith.sh/) sponsors OpenNOW's CI.
+## Credits
 
-## Star history
-
-<a href="https://www.star-history.com/?repos=OpenCloudGaming%2FOpenNOW&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=OpenCloudGaming/OpenNOW&type=date&theme=dark&legend=top-left&sealed_token=13YQdHqPNeJl_PZ60Tn1heFHwLWvLm3sH5u-7HePhBdXpG1poEyGeM3QG_jf08kKYWxfy65fe7OZDjBzuhznLOS5gdEMLDUXY6D7NCLdFIpOTHrmG_JN8Q" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=OpenCloudGaming/OpenNOW&type=date&legend=top-left&sealed_token=13YQdHqPNeJl_PZ60Tn1heFHwLWvLm3sH5u-7HePhBdXpG1poEyGeM3QG_jf08kKYWxfy65fe7OZDjBzuhznLOS5gdEMLDUXY6D7NCLdFIpOTHrmG_JN8Q" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=OpenCloudGaming/OpenNOW&type=date&legend=top-left&sealed_token=13YQdHqPNeJl_PZ60Tn1heFHwLWvLm3sH5u-7HePhBdXpG1poEyGeM3QG_jf08kKYWxfy65fe7OZDjBzuhznLOS5gdEMLDUXY6D7NCLdFIpOTHrmG_JN8Q" />
- </picture>
-</a>
+GeforceXYZ is a fork. The client, the streaming engine, and most of this documentation are the work
+of the [OpenNOW](https://github.com/OpenCloudGaming/OpenNOW) contributors, used under the MIT
+license. Upstream keeps the release process, the
+[Discord](https://discord.gg/8EJYaJcNfD), and the documentation site.
 
 ## License
 
-OpenNOW uses the [MIT License](LICENSE).
+MIT. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES).

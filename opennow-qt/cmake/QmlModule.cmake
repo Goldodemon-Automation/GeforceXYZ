@@ -267,6 +267,7 @@ qt_add_qml_module(opennow-qt
         qml/desktop/onboarding/DesktopOnboardingBoost.qml
         qml/desktop/onboarding/DesktopOnboardingNetwork.qml
         qml/desktop/settings/controls/DesktopSettingsAdvanced.qml
+        qml/desktop/settings/controls/DesktopSettingsBullet.qml
         qml/desktop/settings/controls/DesktopSettingsButton.qml
         qml/desktop/settings/controls/DesktopSettingsHevcHelp.qml
         qml/desktop/settings/controls/DesktopSettingsChoice.qml
@@ -383,10 +384,8 @@ qt_add_qml_module(opennow-qt
         res/brand/desktop-renew.jpg
         res/onboarding/desktop-preview.png
         res/onboarding/console-preview.png
-        res/fonts/Nunito-Variable.ttf
-        res/fonts/IBMPlexMono-Regular.ttf
-        res/fonts/IBMPlexMono-Medium.ttf
-        res/fonts/IBMPlexMono-Bold.ttf
+        res/fonts/Outfit-Variable.ttf
+        res/fonts/Inter-Variable.ttf
         res/icons/desktop-nav-home.svg
         res/icons/desktop-nav-home-active.svg
         res/icons/desktop-nav-library.svg

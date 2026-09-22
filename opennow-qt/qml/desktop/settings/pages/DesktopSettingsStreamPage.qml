@@ -44,7 +44,7 @@ Column {
     }
     DesktopSettingsPanel {
         width: parent.width; paperStyle: true
-        DesktopSettingsSection { text: qsTr("PICTURE") }
+        DesktopSettingsSection { text: qsTr("Streaming quality") }
         DesktopSettingsChoice {
             objectName: "graphicsProcessorSelector"
             visible: GraphicsDevices.selectorVisible
@@ -160,7 +160,7 @@ Column {
     }
     DesktopSettingsPanel {
         width: parent.width; paperStyle: true
-        DesktopSettingsSection { text: qsTr("CONNECTION") }
+        DesktopSettingsSection { text: qsTr("Connection") }
         DesktopSettingsChoice {
             objectName: "streamBackendChoice"
             width: parent.width; glyph: "chip"; title: qsTr("Video backend")

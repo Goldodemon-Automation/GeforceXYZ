@@ -42,7 +42,8 @@ TestCase {
     }
 
     function contrastOnDark(color) {
-        const background = Qt.color("#04060A")
+        // Matches the launch screen's own shell black.
+        const background = Qt.color("#0D0D0D")
         const linear = value => value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4)
         const luminance = value => linear(value.r) * 0.2126 + linear(value.g) * 0.7152 + linear(value.b) * 0.0722
         const composited = Qt.rgba(color.r * color.a + background.r * (1 - color.a),
@@ -93,7 +94,9 @@ TestCase {
         ShellStore.settings = {themePack: "nocturne", appTheme: "light"}
         ShellStore.streamState = "failed"
         compare(textItem("Session could not start").color, DesktopTokens.danger)
-        compare(textItem("Try again").color, Qt.color("#0A0D14"))
+        // The primary action reads in the palette's on-accent ink, which the
+        // theme resolves against the active accent instead of a fixed value.
+        compare(textItem("Try again").color, Theme.focusText)
         compare(textItem("Cancel session").color, Theme.mediaForeground)
         ShellStore.streamState = "reconnecting"
         compare(textItem("Reconnecting to your session").color, Theme.mediaForeground)

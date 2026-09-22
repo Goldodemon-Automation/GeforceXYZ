@@ -22,7 +22,8 @@ public slots:
         for (const auto *name : {"ShellViewport", "AppChrome", "GlassPanel", "ControllerGlyph", "HintBar", "NavPill"}) {
             qmlRegisterType(QUrl::fromLocalFile(source + "/components/" + name + ".qml"), "OpenNOW", 1, 0, name);
         }
-        QFontDatabase::addApplicationFont(QStringLiteral(":/qt/qml/OpenNOW/res/fonts/Nunito-Variable.ttf"));
+        QFontDatabase::addApplicationFont(QStringLiteral(":/qt/qml/OpenNOW/res/fonts/Outfit-Variable.ttf"));
+        QFontDatabase::addApplicationFont(QStringLiteral(":/qt/qml/OpenNOW/res/fonts/Inter-Variable.ttf"));
     }
 
     void qmlEngineAvailable(QQmlEngine *engine)

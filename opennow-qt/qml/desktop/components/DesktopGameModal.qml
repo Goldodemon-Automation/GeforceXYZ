@@ -210,7 +210,7 @@ FocusScope {
         return value ? qsTr("Selected region") : qsTr("Automatic region")
     }
     Rectangle {
-        anchors.fill: parent; color: "#A6040D10"; opacity: reveal.progress
+        anchors.fill: parent; color: "#A60D0D0D"; opacity: reveal.progress
         MouseArea {
             anchors.fill: parent; acceptedButtons: Qt.AllButtons
             hoverEnabled: true; preventStealing: true
@@ -336,7 +336,7 @@ FocusScope {
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: platformButton.text
                                         font: platformButton.font
-                                        color: platformButton.checked ? "#0A0D14" : Theme.label
+                                        color: platformButton.checked ? "#0D0D0D" : Theme.label
                                     }
                                 }
                             }

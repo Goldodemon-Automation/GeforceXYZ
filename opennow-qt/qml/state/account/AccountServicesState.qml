@@ -10,6 +10,9 @@ QtObject {
     required property var refreshAccountServices
     signal accessibilityAnnounced(string message)
     property var subscription: null
+    // When the current subscription payload arrived, so the Account page can
+    // say how fresh the details are instead of inventing a timestamp.
+    property double subscriptionRefreshedMs: 0
     property string subscriptionRequestId: ""
     property var regions: []
     property string regionsVpcId: ""
@@ -146,6 +149,7 @@ QtObject {
 
     function acceptSubscription(result) {
         root.subscription = result.subscription || null
+        root.subscriptionRefreshedMs = Date.now()
         root.subscriptionRequestId = ""
     }
 

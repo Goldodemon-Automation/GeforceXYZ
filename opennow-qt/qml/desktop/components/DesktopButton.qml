@@ -21,13 +21,18 @@ Button {
     font.family: DesktopTokens.bodyFont
     font.pixelSize: 12
     font.weight: Font.ExtraBold
+    // Ink that survives every surface: gold fill for the primary action,
+    // theme-aware raised glass for everything else.
+    readonly property color ink: root.primary ? Theme.focusText
+        : root.danger ? Theme.coral
+        : root.onMediaBackground ? Theme.mediaForeground : DesktopTokens.textHigh
     background: Rectangle {
         radius: root.cornerRadius
-        color: root.primary ? (root.down ? "#D9D9D9" : "#FFFFFFFF")
-             : root.danger ? (root.hovered || root.activeFocus ? "#29FF8A80" : "#14FF8A80")
-             : (root.hovered || root.activeFocus ? "#1FFFFFFF" : "#0FFFFFFF")
+        color: root.primary ? (root.down ? Qt.darker(Theme.focus, 1.1) : Theme.focus)
+             : root.danger ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, root.hovered || root.activeFocus ? 0.22 : 0.12)
+             : (root.hovered || root.activeFocus ? DesktopTokens.raisedStrong : DesktopTokens.raised)
         border.width: root.primary ? 0 : 1
-        border.color: root.danger ? "#52FF8A80" : "#1FFFFFFF"
+        border.color: root.danger ? Qt.rgba(Theme.coral.r, Theme.coral.g, Theme.coral.b, 0.42) : Theme.seam
         scale: root.down && !AppController.reducedMotion ? 0.985 : 1
         Behavior on color { ColorAnimation { duration: DesktopTokens.quickDuration } }
         Behavior on scale { NumberAnimation { duration: DesktopTokens.quickDuration; easing.type: Easing.OutCubic } }
@@ -62,15 +67,14 @@ Button {
                 width: root.glyphSize; height: root.glyphSize
                 sourceComponent: DesktopSettingsIcon {
                     glyph: root.themedGlyph
-                    ink: root.primary ? "#0A0D14" : root.onMediaBackground ? Theme.mediaForeground : Theme.label
+                    ink: root.ink
                 }
             }
             Text {
                 visible: root.text !== ""
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.text
-                color: root.primary ? "#0A0D14" : root.danger ? "#FFB4AE"
-                    : root.onMediaBackground ? Theme.mediaForeground : DesktopTokens.textHigh
+                color: root.ink
                 font: root.font
             }
             KeyboardGlyph {
@@ -79,7 +83,7 @@ Button {
                 shortcut: root.shortcutSequence
                 Accessible.name: root.shortcutText
                 keySize: 20
-                ink: root.primary ? "#0B0F1A" : root.onMediaBackground ? Theme.mediaMuted : DesktopTokens.textMuted
+                ink: root.primary ? Theme.focusText : root.onMediaBackground ? Theme.mediaMuted : DesktopTokens.textMuted
             }
         }
     }

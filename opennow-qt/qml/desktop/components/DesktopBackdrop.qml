@@ -51,10 +51,12 @@ Item {
     Rectangle {
         visible: root.signIn
         anchors.fill: parent
+        // Shell-derived scrims so the sign-in hero works in both palettes
+        // instead of pinning a blue-black overlay.
         gradient: Gradient {
-            GradientStop { position: 0; color: "#B80B0F1A" }
-            GradientStop { position: 0.4; color: "#990B0F1A" }
-            GradientStop { position: 1; color: "#D60B0F1A" }
+            GradientStop { position: 0; color: Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.72) }
+            GradientStop { position: 0.4; color: Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.60) }
+            GradientStop { position: 1; color: Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.84) }
         }
     }
     Rectangle {
@@ -62,9 +64,9 @@ Item {
         anchors.fill: parent
         gradient: Gradient {
             orientation: Gradient.Horizontal
-            GradientStop { position: 0; color: "#F2070A11" }
+            GradientStop { position: 0; color: Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.95) }
             GradientStop { position: 0.5; color: "#00000000" }
-            GradientStop { position: 1; color: "#F2070A11" }
+            GradientStop { position: 1; color: Qt.rgba(Theme.shell.r, Theme.shell.g, Theme.shell.b, 0.95) }
         }
     }
 
@@ -76,7 +78,7 @@ Item {
         z: String(ShellStore.settings.desktopBackground || "art") === "gradient" ? 1 : 0
         gradient: Gradient {
             GradientStop { position: 0; color: Qt.rgba(Theme.focus.r,Theme.focus.g,Theme.focus.b,
-                String(ShellStore.settings.desktopBackground || "art") === "gradient" ? 0.22 : 0.07) }
+                String(ShellStore.settings.desktopBackground || "art") === "gradient" ? 0.20 : 0.10) }
             GradientStop { position: 0.4; color: "transparent" }
         }
     }

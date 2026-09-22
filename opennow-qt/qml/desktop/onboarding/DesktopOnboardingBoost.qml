@@ -14,7 +14,7 @@ Column {
     readonly property bool wide: width >= DesktopTokens.px(1000)
     readonly property color mint: Theme.accentColor("green")
     readonly property color blue: Theme.accentColor("blue")
-    readonly property color panelColor: Theme.lightMode ? Theme.glass : "#C70B0F1A"
+    readonly property color panelColor: Theme.lightMode ? Theme.glass : "#C70D0D0D"
     spacing: DesktopTokens.px(24)
 
     component Copy: Text {
@@ -356,7 +356,7 @@ Column {
     Rectangle {
         width: parent.width
         implicitHeight: Math.max(DesktopTokens.px(48), hints.implicitHeight + DesktopTokens.px(24))
-        radius: DesktopTokens.px(14); color: Theme.lightMode ? Theme.glass : "#B80B0F1A"; border.color: DesktopTokens.seamSoft
+        radius: DesktopTokens.px(14); color: Theme.lightMode ? Theme.glass : "#B80D0D0D"; border.color: DesktopTokens.seamSoft
         Flow {
             id: hints
             x: DesktopTokens.px(18); y: DesktopTokens.px(12); width: parent.width - DesktopTokens.px(36)
