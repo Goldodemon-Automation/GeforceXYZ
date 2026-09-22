@@ -38,10 +38,18 @@ try {
         Set-Content "$deployment/$name" "signed $name"
         Copy-Item "$deployment/$name" $package
     }
+    $marker = "name: OpenNOW`nversion: 1.0.0`ncommit: fixture"
+    Set-Content "$root/package/@Release" $marker
     Assert-OpenNowSignedPackage -Root "$root/package" -SignedRoot $deployment
     $verifiedBeforeUnsigned = $script:Verified.Count
     Assert-OpenNowPackagePayload -Root "$root/package" -DeploymentRoot $deployment
     if ($script:Verified.Count -ne $verifiedBeforeUnsigned) { throw "Unsigned validation invoked signtool" }
+    Remove-Item "$root/package/@Release"
+    Assert-Fails { Assert-OpenNowReleaseMarker -Root "$root/package" } "@Release"
+    Assert-Fails { Assert-OpenNowPackagePayload -Root "$root/package" -DeploymentRoot $deployment } "@Release"
+    Set-Content "$root/package/@Release" "not a marker"
+    Assert-Fails { Assert-OpenNowReleaseMarker -Root "$root/package" } "missing the name: field"
+    Set-Content "$root/package/@Release" $marker
     $script:HelperDependency = "Qt6Core.dll"
     Assert-Fails { Assert-OpenNowPackagePayload -Root "$root/package" -DeploymentRoot $deployment } "without non-system DLLs: qt6core.dll"
     $script:HelperDependency = "KERNEL32.dll"
@@ -79,6 +87,7 @@ try {
 
     $source = New-Item -ItemType Directory "$root/source"
     $module = (Resolve-Path "$PSScriptRoot/../packaging/WindowsReleaseBinaries.cmake").Path.Replace('\', '/')
+    $markerModule = (Resolve-Path "$PSScriptRoot/../cmake/ReleaseMarker.cmake").Path.Replace('\', '/')
     $deployPath = $deployment.FullName.Replace('\', '/')
     @"
 cmake_minimum_required(VERSION 3.24)
@@ -89,8 +98,12 @@ add_executable(opennow-qt IMPORTED)
 set_target_properties(opennow-qt PROPERTIES IMPORTED_LOCATION "$deployPath/OpenNOW.exe")
 include("$module")
 install(PROGRAMS "$deployPath/OpenNOW.exe" DESTINATION bin)
+set(OPENNOW_BUILD_VERSION 1.0.0)
+set(OPENNOW_NUMERIC_VERSION 1.0.0)
+set(OPENNOW_PACKAGE_ARCH x64)
 set(CPACK_PACKAGE_NAME PackageContract)
 set(CPACK_PACKAGE_VERSION 1.0.0)
+include("$markerModule")
 set(CPACK_GENERATOR ZIP)
 include(CPack)
 "@ | Set-Content "$source/CMakeLists.txt"
@@ -134,6 +147,7 @@ include(CPack)
         }
         New-Item -ItemType Directory "$env:RUNNER_TEMP/msi-expanded" | Out-Null
         Copy-Item "$deployment/*" "$env:RUNNER_TEMP/msi-expanded"
+        Copy-Item "$root/package/@Release" "$env:RUNNER_TEMP/msi-expanded"
         [pscustomobject]@{ ExitCode = $script:ExtractionExitCode }
     }
     $savedEnvironment = @{}
