@@ -46,12 +46,14 @@ Item {
     readonly property var featureBadges: {
         const badges = []
         if (shown("Video") && (profile.enableHdr === true || profile.hdr === true)) badges.push({text:"HDR", ink:Theme.focus})
-        if (frameGenerationEnabled) badges.push({text:qsTr("FRAME GEN 2×"), ink:Theme.focus})
+        if (frameGenerationEnabled) badges.push({text:frameGenerationAutomatic ? qsTr("FRAME GEN AUTO") : qsTr("FRAME GEN 2×"), ink:Theme.focus})
         if (shown("Video") && Qt.platform.os === "osx" && ShellStore.settings.upscaling === "metalfx") badges.push({text:"METALFX", ink:Theme.focus})
         return badges
     }
     readonly property bool telemetryActive: live.status === "streaming"
-    readonly property bool frameGenerationEnabled: String(ShellStore.settings.frameGeneration || "off") === "2x"
+    readonly property string frameGenerationMode: String(ShellStore.settings.frameGeneration || "off")
+    readonly property bool frameGenerationAutomatic: frameGenerationMode === "auto"
+    readonly property bool frameGenerationEnabled: frameGenerationMode === "2x" || frameGenerationAutomatic
     readonly property var cards: metricCards()
     readonly property var compactMetrics: compactItems()
     property var history: ({})
@@ -73,6 +75,7 @@ Item {
         case "active": return qsTr("Active")
         case "display-refresh": return qsTr("Display refresh")
         case "source-rate-limit": return qsTr("120 FPS generation limit")
+        case "target-reached": return qsTr("60 FPS target reached")
         case "hdr-unavailable": return qsTr("Unavailable with HDR")
         case "overloaded": return qsTr("Overloaded")
         case "discontinuity": return qsTr("Discontinuity")

@@ -15,6 +15,7 @@
 #include <utility>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 
 namespace {
 class ExternalCommandScope final
@@ -40,7 +41,7 @@ private:
 
 class NativeStreamRenderCallback final : public StreamVideoRenderCallback
 {
-    enum class FrameGenerationState { Off, WarmingUp, Active, DisplayTooSlow, Overloaded, Unavailable, Discontinuity, SourceRateLimit, HdrUnsupported };
+    enum class FrameGenerationState { Off, WarmingUp, Active, DisplayTooSlow, Overloaded, Unavailable, Discontinuity, SourceRateLimit, HdrUnsupported, TargetReached };
 public:
     explicit NativeStreamRenderCallback(NativeStreamRuntime *runtime)
         : m_runtime(runtime)
@@ -278,7 +279,8 @@ public:
         if (!m_frameGeneration || m_frameGenerationFailed) return;
 
         const auto now = clockNs();
-        const auto decision = m_pacer.source(info.sequence, info.presentation_time_ns, now, m_refreshRate);
+        const auto decision = m_pacer.source(info.sequence, info.presentation_time_ns, now,
+                                             m_refreshRate, m_targetFps);
         updateTimingStats();
         if (decision == StreamFramePacer::Result::Duplicate) {
             m_outputDirty = false;
@@ -294,6 +296,7 @@ public:
             m_interpolator.reset();
             switch (decision) {
             case StreamFramePacer::Result::SourceRateLimit: m_frameGenerationStatus.store(FrameGenerationState::SourceRateLimit); return;
+            case StreamFramePacer::Result::TargetReached: m_frameGenerationStatus.store(FrameGenerationState::TargetReached); return;
             case StreamFramePacer::Result::DisplayTooSlow: m_frameGenerationStatus.store(FrameGenerationState::DisplayTooSlow); return;
             case StreamFramePacer::Result::Overloaded: m_frameGenerationStatus.store(FrameGenerationState::Overloaded); return;
             case StreamFramePacer::Result::Discontinuity: m_frameGenerationStatus.store(FrameGenerationState::Discontinuity); break;
@@ -361,6 +364,14 @@ public:
         m_reportedRefreshRate.store(refreshRate);
     }
 
+    void setFrameGenerationTarget(double targetFps) override
+    {
+        targetFps = std::isfinite(targetFps) && targetFps > 0 ? targetFps : 0.0;
+        if (m_targetFps != targetFps) m_resetFrameGeneration = true;
+        m_targetFps = targetFps;
+        m_reportedTargetFps.store(targetFps);
+    }
+
     bool needsFrame() const override
     {
         return m_needsFrame.load() && m_runtime && m_runtime->presentationAllowed();
@@ -387,7 +398,8 @@ public:
         const QString states[] = {QStringLiteral("off"), QStringLiteral("warming-up"),
             QStringLiteral("active"), QStringLiteral("display-refresh"),
             QStringLiteral("overloaded"), QStringLiteral("unavailable"), QStringLiteral("discontinuity"),
-            QStringLiteral("source-rate-limit"), QStringLiteral("hdr-unavailable")};
+            QStringLiteral("source-rate-limit"), QStringLiteral("hdr-unavailable"),
+            QStringLiteral("target-reached")};
         const QString timing[] = {QStringLiteral("none"), QStringLiteral("source-timestamps"),
                                   QStringLiteral("arrival-cadence")};
         const QString rejections[] = {QStringLiteral("none"), QStringLiteral("sequence-gap"),
@@ -401,6 +413,7 @@ public:
                 {QStringLiteral("arrivalDeltaMs"), double(m_arrivalDelta.load()) / 1.0e6},
                 {QStringLiteral("sequenceDelta"), qulonglong(m_sequenceDelta.load())},
                 {QStringLiteral("refreshRateHz"), m_reportedRefreshRate.load()},
+                {QStringLiteral("targetFps"), m_reportedTargetFps.load()},
                 {QStringLiteral("outputFps"), clockNs() - m_sampleStart.load() < 2'000'000'000
                     ? m_outputFps.load() : 0.0}};
     }
@@ -473,6 +486,7 @@ private:
     QSize m_historySize;
     QRhiTexture::Format m_historyFormat = QRhiTexture::UnknownFormat;
     double m_refreshRate = 0;
+    double m_targetFps = 0;
     bool m_frameGeneration = false;
     QSize m_upscalingTarget;
     bool m_fsrUpscaling = false;
@@ -496,6 +510,7 @@ private:
     std::atomic_uint64_t m_sequenceDelta = 0;
     std::atomic_int64_t m_arrivalDelta = 0;
     std::atomic<double> m_reportedRefreshRate = 0;
+    std::atomic<double> m_reportedTargetFps = 0;
     OpenNowStreamerFrame *m_preparedFrame = nullptr;
     int m_stencilReference = 0;
     bool m_stencil = false;

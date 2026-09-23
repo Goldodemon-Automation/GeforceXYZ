@@ -352,13 +352,17 @@ private slots:
         QTest::addColumn<bool>("enabled");
         QTest::addColumn<int>("timestampMode");
         QTest::addColumn<bool>("moving");
-        QTest::newRow("absent-pts") << true << 0 << false;
-        QTest::newRow("repeated-pts") << true << 1 << false;
-        QTest::newRow("grouped-pts") << true << 2 << false;
-        QTest::newRow("off-control") << false << 0 << false;
-        QTest::newRow("moving-repeated-pts") << true << 1 << true;
-        QTest::newRow("moving-grouped-pts") << true << 2 << true;
-        QTest::newRow("moving-off-control") << false << 1 << true;
+        QTest::addColumn<double>("targetFps");
+        QTest::newRow("absent-pts") << true << 0 << false << 0.0;
+        QTest::newRow("repeated-pts") << true << 1 << false << 0.0;
+        QTest::newRow("grouped-pts") << true << 2 << false << 0.0;
+        QTest::newRow("off-control") << false << 0 << false << 0.0;
+        QTest::newRow("moving-repeated-pts") << true << 1 << true << 0.0;
+        QTest::newRow("moving-grouped-pts") << true << 2 << true << 0.0;
+        QTest::newRow("moving-off-control") << false << 1 << true << 0.0;
+        QTest::newRow("absent-pts-target-60") << true << 0 << false << 60.0;
+        QTest::newRow("moving-repeated-pts-target-60") << true << 1 << true << 60.0;
+        QTest::newRow("moving-grouped-pts-target-60") << true << 2 << true << 60.0;
     }
 
     void productionCallback()
@@ -367,6 +371,7 @@ private slots:
         QFETCH(bool, enabled);
         QFETCH(int, timestampMode);
         QFETCH(bool, moving);
+        QFETCH(double, targetFps);
         Producer producer;
 #if !defined(Q_OS_WIN)
         producer.instance = &m_instance;
@@ -413,6 +418,7 @@ private slots:
         auto callback = createNativeStreamRenderCallback(&runtime);
         const auto release = qScopeGuard([&] { callback->releaseResources(); });
         callback->setFrameGeneration(enabled, 165.0);
+        callback->setFrameGenerationTarget(targetFps);
         QMatrix4x4 matrix = m_rhi->clipSpaceCorrMatrix();
         matrix.ortho(0, size.width(), size.height(), 0, -1, 1);
         const QRectF bounds(QPointF(0, 0), QSizeF(size));

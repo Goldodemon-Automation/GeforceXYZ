@@ -77,11 +77,15 @@ Column {
         }
         DesktopSettingsRow {
             width: parent.width; paperStyle: true; glyph: "speed"; title: qsTr("Frame generation (Experimental)")
-            description: qsTr("Targets 120 displayed FPS from a 60 FPS stream. Requires a fast GPU and 120 Hz display; adds latency and artifacts.")
+            description: qsTr("Local interpolation targets 120 displayed FPS with 2×, while Auto 60 only fills missing frames while the stream runs below 60 FPS and stops once it reaches 60. Needs a fast GPU and a matching display; adds latency and artifacts.")
             DesktopSettingsSegmented {
-                readonly property string current: String(page.settingsScreen.valueSetting("frameGeneration", "off")) === "2x" ? "2x" : "off"
-                options: [{label: qsTr("Off"), value: "off"}, {label: qsTr("2×"), value: "2x"}]
-                optionWidth: 64; selectedIndex: options.findIndex(item => item.value === current)
+                objectName: "frameGenerationSelector"
+                readonly property string current: {
+                    const value = String(page.settingsScreen.valueSetting("frameGeneration", "off"))
+                    return ["off", "auto", "2x"].indexOf(value) >= 0 ? value : "off"
+                }
+                options: [{label: qsTr("Off"), value: "off"}, {label: qsTr("Auto 60"), value: "auto"}, {label: qsTr("2×"), value: "2x"}]
+                optionWidth: 72; selectedIndex: options.findIndex(item => item.value === current)
                 onSelected: (index,item) => page.settingsScreen.setSetting("frameGeneration", item.value)
             }
         }

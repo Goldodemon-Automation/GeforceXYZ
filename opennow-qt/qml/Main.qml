@@ -23,7 +23,7 @@ ApplicationWindow {
     readonly property string frameGenerationStatus: String(frameGenerationStats.status || "")
     readonly property string frameGenerationDiagnosticKey: [frameGenerationStatus,
         frameGenerationStats.timingSource || "none", frameGenerationStats.rejectionReason || "none",
-        frameGenerationStats.refreshRateHz || 0].join(":")
+        frameGenerationStats.refreshRateHz || 0, frameGenerationStats.targetFps || 0].join(":")
     onFrameGenerationDiagnosticKeyChanged: {
         if (frameGenerationStatus !== "")
             CoreClient.logShellDiagnostic("frame-generation state=" + frameGenerationStatus
@@ -35,6 +35,7 @@ ApplicationWindow {
                 + " arrivalDeltaMs=" + Number(frameGenerationStats.arrivalDeltaMs || 0).toFixed(3)
                 + " sequenceDelta=" + Number(frameGenerationStats.sequenceDelta || 0)
                 + " refreshHz=" + Number(frameGenerationStats.refreshRateHz || 0).toFixed(2)
+                + " targetFps=" + Number(frameGenerationStats.targetFps || 0).toFixed(0)
                 + " scope=" + (SmokeTestMode ? "acceptance" : "stream"))
     }
     property bool geometryRestored: false

@@ -309,7 +309,7 @@ impl SettingsStore {
             &["8bit_420", "10bit_420", "8bit_444", "10bit_444"],
             "8bit_420",
         );
-        normalize_choice(&mut self.values, "frameGeneration", &["off", "2x"], "off");
+        normalize_choice(&mut self.values, "frameGeneration", &["off", "2x", "auto"], "off");
         normalize_choice(
             &mut self.values,
             "upscaling",

@@ -75,7 +75,13 @@ QtObject {
         screen.goToStep(3)
         const generation = find(screen, "onboardingFrameGeneration")
         check(generation && generation.selectedIndex === 0, "frame generation did not default off")
+        check(generation.options.length === 3 && generation.options[1].value === "auto",
+            "onboarding must offer the automatic 60 FPS target")
         generation.selected(1, generation.options[1])
+        check(ShellStore.onboardingSettings.frameGeneration === "auto",
+            "automatic selection was not staged")
+        const generation2x = generation.options.findIndex(option => option.value === "2x")
+        generation.selected(generation2x, generation.options[generation2x])
         check(ShellStore.onboardingSettings.frameGeneration === "2x", "2x selection was not staged")
         check(ShellStore.settings.frameGeneration === "off", "frame generation saved prematurely")
         const upscaling = find(screen, "onboardingUpscaling")
