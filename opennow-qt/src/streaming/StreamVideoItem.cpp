@@ -228,13 +228,34 @@ bool StreamVideoItem::frameGeneration() const
 
 void StreamVideoItem::setFrameGeneration(bool enabled)
 {
-    if (m_frameGeneration == enabled) return;
-    m_frameGeneration = enabled;
-    if (enabled) m_frameStatsTimer.start();
+    setFrameGenerationMode(enabled ? QStringLiteral("2x") : QStringLiteral("off"));
+}
+
+QString StreamVideoItem::frameGenerationMode() const
+{
+    return m_frameGenerationMode;
+}
+
+void StreamVideoItem::setFrameGenerationMode(const QString &mode)
+{
+    const QString normalized = mode == QStringLiteral("2x") || mode == QStringLiteral("auto")
+            ? mode : QStringLiteral("off");
+    if (m_frameGenerationMode == normalized) return;
+    const bool wasEnabled = m_frameGeneration;
+    m_frameGenerationMode = normalized;
+    m_frameGeneration = normalized != QStringLiteral("off");
+    if (m_frameGeneration) m_frameStatsTimer.start();
     else m_frameStatsTimer.stop();
-    emit frameGenerationChanged();
+    emit frameGenerationModeChanged();
+    if (wasEnabled != m_frameGeneration) emit frameGenerationChanged();
     emit frameGenerationStatsChanged();
     update();
+}
+
+double StreamVideoItem::frameGenerationTargetFps() const
+{
+    return m_frameGenerationMode == QStringLiteral("auto") ? automaticFrameGenerationTargetFps
+                                                           : 0.0;
 }
 
 QVariantMap StreamVideoItem::frameGenerationStats() const

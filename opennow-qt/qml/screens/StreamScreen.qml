@@ -93,7 +93,7 @@ FocusScope {
         clipboardPaste: ShellStore.settings.clipboardPaste === true
         keyboardLayout: String((ShellStore.activeSession || {}).keyboardLayout || "en-US")
         videoSize: Qt.size(Number(root.profile.width || 0), Number(root.profile.height || 0))
-        frameGeneration: String(ShellStore.settings.frameGeneration || 'off') === '2x'
+        frameGenerationMode: String(ShellStore.settings.frameGeneration || 'off')
         metalFxUpscaling: Qt.platform.os === "osx" && ShellStore.settings.upscaling === "metalfx"
         fsrUpscaling: Qt.platform.os !== "osx" && ShellStore.settings.upscaling === "fsr1"
         upscalingSharpness: Number(ShellStore.settings.upscalingSharpness ?? 10)

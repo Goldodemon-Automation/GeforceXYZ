@@ -41,6 +41,8 @@ class StreamVideoItem : public QQuickItem
                    NOTIFY shortcutBindingsChanged)
     Q_PROPERTY(bool frameGeneration READ frameGeneration WRITE setFrameGeneration
                    NOTIFY frameGenerationChanged)
+    Q_PROPERTY(QString frameGenerationMode READ frameGenerationMode WRITE setFrameGenerationMode
+                   NOTIFY frameGenerationModeChanged)
     Q_PROPERTY(bool metalFxUpscaling READ metalFxUpscaling WRITE setMetalFxUpscaling
                    NOTIFY metalFxUpscalingChanged)
     Q_PROPERTY(bool fsrUpscaling READ fsrUpscaling WRITE setFsrUpscaling
@@ -84,6 +86,11 @@ public:
     void setRenderCallback(std::shared_ptr<StreamVideoRenderCallback> callback);
     bool frameGeneration() const;
     void setFrameGeneration(bool enabled);
+    [[nodiscard]] QString frameGenerationMode() const;
+    void setFrameGenerationMode(const QString &mode);
+    // Displayed frame rate the automatic mode interpolates toward.
+    [[nodiscard]] double frameGenerationTargetFps() const;
+    static constexpr double automaticFrameGenerationTargetFps = 60.0;
     bool metalFxUpscaling() const;
     void setMetalFxUpscaling(bool enabled);
     bool fsrUpscaling() const;
@@ -132,6 +139,7 @@ signals:
     void relativeMouseChanged();
     void shortcutBindingsChanged();
     void frameGenerationChanged();
+    void frameGenerationModeChanged();
     void metalFxUpscalingChanged();
     void fsrUpscalingChanged();
     void upscalingSharpnessChanged();
@@ -198,6 +206,7 @@ private:
     QString m_keyboardLayout = QStringLiteral("en-US");
     const PhysicalKeyMap::Layout *m_keyboardMap = PhysicalKeyMap::layoutFor("en-US");
     bool m_frameGeneration = false;
+    QString m_frameGenerationMode = QStringLiteral("off");
     bool m_metalFxUpscaling = false;
     bool m_fsrUpscaling = false;
     int m_upscalingSharpness = 10;

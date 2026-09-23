@@ -380,12 +380,20 @@ on direct launch.
 
 ### Local frame generation (experimental)
 
-The desktop Streaming settings and console Video settings offer **Off** (default) or **2×**.
-This is local video interpolation, not a higher GeForce NOW tier or a change to the negotiated
-stream FPS. A 60 FPS stream targets 120 displayed FPS only with a sufficiently fast local GPU
-and a display running at approximately 120 Hz or higher. Input and game simulation remain at
-the source rate. Interpolation adds presentation latency and can artifact around fast motion,
-thin geometry, transparency, repeated textures, and the game's HUD.
+The desktop Streaming settings and console Video settings offer **Off** (default), **Auto 60**, or
+**2×**. This is local video interpolation, not a higher GeForce NOW tier or a change to the
+negotiated stream FPS. Input and game simulation remain at the source rate. Interpolation adds
+presentation latency and can artifact around fast motion, thin geometry, transparency, repeated
+textures, and the game's HUD.
+
+**Auto 60** targets a 60 FPS presentation. It interpolates only while the measured source cadence
+is below 60 FPS and the display can present 60 FPS, so a stream that already reaches 60 is never
+interpolated. The release point sits within 1% of the target and re-engagement requires the source
+to fall more than 3% below it, which keeps a source that is nominally on 60 (a 60 FPS cadence
+measures 59.9999988 from arrival timing) from toggling generation on and off every frame. Reaching
+the target reports `target-reached`. **2×** targets 120 displayed FPS instead and needs a
+sufficiently fast local GPU and a display running at approximately 120 Hz or higher. The Off path
+allocates nothing in either mode.
 Generation is limited to a nominal 120 FPS target: source cadences faster than 60 FPS (with a
 small arrival-jitter margin) bypass interpolation and report `source-rate-limit`. In particular,
 a 120 FPS source is never doubled to 240, even on a 240 Hz or faster display. Normal source
@@ -412,11 +420,12 @@ instead of growing a queue. Device/surface changes and toggling the mode clear i
 history. Unsupported GPU resources leave normal streaming active.
 
 The statistics overlay keeps **STREAM FPS** as the source measurement and adds **LOCAL OUTPUT
-FPS** when 2× is selected. The latter counts newly selected video outputs at Qt's `frameSwapped`
+FPS** when 2× or Auto 60 is selected. The latter counts newly selected video outputs at Qt's `frameSwapped`
 boundary, not twice the stream FPS and not unrelated overlay redraws. It is a presentation-submit
 measurement, not a hardware scanout measurement; generated slots rejected by the scene-cut or
 confidence checks can contain the actual source image. The frame-generation status reports
-warmup, insufficient refresh, overload, discontinuities, and unavailable resources.
+warmup, insufficient refresh, overload, discontinuities, reaching the target, and unavailable
+resources.
 Both desktop and console routes pass the active video item's snapshot to the top-level statistics
 overlay and clipboard report. Sampled state changes are logged on the GUI thread to
 `diagnostics/native-streamer.log` as `shell-mode frame-generation state=... outputFps=...`;

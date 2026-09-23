@@ -238,6 +238,57 @@ private slots:
         QCOMPARE(pacer.source(4, 2'000'000'000, 50'000'001, 165), StreamFramePacer::Result::Discontinuity);
         QCOMPARE(pacer.rejection(), StreamFramePacer::Rejection::TimestampJump);
     }
+
+    void fixedTargetEngagesOnlyBelowTheTargetAndReleasesAtIt()
+    {
+        StreamFramePacer pacer;
+        using Result = StreamFramePacer::Result;
+        // 50 FPS on a 60 Hz display is below the 60 FPS target, so generation engages.
+        QCOMPARE(pacer.source(1, 0, 0, 60, 60), Result::WarmingUp);
+        QCOMPARE(pacer.source(2, 20'000'000, 20'000'000, 60, 60), Result::Interpolate);
+        // The source reaches 60 FPS, so the target is reported and generation releases.
+        std::uint64_t sequence = 2;
+        std::uint64_t timestamp = 20'000'000;
+        std::int64_t now = 20'000'000;
+        for (int frame = 0; frame < 12; ++frame) {
+            now += 16'666'667;
+            timestamp += 16'666'667;
+            QCOMPARE(pacer.source(++sequence, timestamp, now, 60, 60), Result::TargetReached);
+        }
+        // Just inside the release band the target stays active instead of flapping every frame.
+        now += 16'950'000;
+        timestamp += 16'950'000;
+        QCOMPARE(pacer.source(++sequence, timestamp, now, 60, 60), Result::TargetReached);
+        // Clearly below the target, generation engages again.
+        now += 18'000'000;
+        timestamp += 18'000'000;
+        QCOMPARE(pacer.source(++sequence, timestamp, now, 60, 60), Result::Interpolate);
+    }
+
+    void fixedTargetRejectsSourcesAtOrAboveItsRate()
+    {
+        for (const auto interval : {8'333'333ULL, 11'111'111ULL, 16'666'667ULL}) {
+            StreamFramePacer pacer;
+            pacer.source(1, 0, 0, 144, 60);
+            for (std::uint64_t frame = 2; frame <= 12; ++frame)
+                QCOMPARE(pacer.source(frame, (frame - 1) * interval, (frame - 1) * interval, 144, 60),
+                         StreamFramePacer::Result::TargetReached);
+        }
+    }
+
+    void fixedTargetNeedsOnlyTheTargetRefresh()
+    {
+        StreamFramePacer pacer;
+        pacer.source(1, 0, 0, 50, 60);
+        QCOMPARE(pacer.source(2, 20'000'000, 20'000'000, 50, 60),
+                 StreamFramePacer::Result::DisplayTooSlow);
+        // Doubling the same source needs roughly twice its cadence, which this display cannot do,
+        // even though it can present the fixed 60 FPS target.
+        StreamFramePacer doubled;
+        doubled.source(1, 0, 0, 50);
+        QCOMPARE(doubled.source(2, 20'000'000, 20'000'000, 50),
+                 StreamFramePacer::Result::DisplayTooSlow);
+    }
 };
 
 QTEST_APPLESS_MAIN(FramePacerTest)

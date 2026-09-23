@@ -10,6 +10,8 @@ Column {
     required property var store
     readonly property var settings: store.onboardingSettings
     readonly property bool upscalingEnabled: settings.upscaling === (mac ? "metalfx" : "fsr1")
+    readonly property bool frameGenerationEnabled: settings.frameGeneration === "2x"
+        || settings.frameGeneration === "auto"
     readonly property bool mac: Qt.platform.os === "osx"
     readonly property bool wide: width >= DesktopTokens.px(1000)
     readonly property color mint: Theme.accentColor("green")
@@ -163,8 +165,8 @@ Column {
             Layout.alignment: Qt.AlignTop
             implicitHeight: generationContents.implicitHeight + DesktopTokens.px(4)
             color: root.panelColor; radius: DesktopTokens.px(16)
-            border.width: root.settings.frameGeneration === "2x" ? DesktopTokens.px(2) : 1
-            border.color: root.settings.frameGeneration === "2x" ? root.mint : Theme.seam
+            border.width: root.frameGenerationEnabled ? DesktopTokens.px(2) : 1
+            border.color: root.frameGenerationEnabled ? root.mint : Theme.seam
             Column {
                 id: generationContents
                 x: DesktopTokens.px(2); y: DesktopTokens.px(2); width: parent.width - DesktopTokens.px(4)
@@ -222,9 +224,9 @@ Column {
                             objectName: "onboardingFrameGeneration"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                             implicitHeight: DesktopTokens.px(36)
-                            options: [{label:qsTr("Off"),value:"off"},{label:qsTr("2×"),value:"2x"}]
-                            selectedIndex: root.settings.frameGeneration === "2x" ? 1 : 0
-                            optionWidth: 56
+                            options: [{label:qsTr("Off"),value:"off"},{label:qsTr("Auto 60"),value:"auto"},{label:qsTr("2×"),value:"2x"}]
+                            selectedIndex: Math.max(0, ["off","auto","2x"].indexOf(String(root.settings.frameGeneration || "off")))
+                            optionWidth: 64
                             onSelected: (index, item) => root.store.setOnboardingSetting("frameGeneration", item.value)
                         }
                     }

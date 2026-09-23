@@ -21,9 +21,13 @@ public:
             m_callback = callback;
         }
         m_bounds = item->boundingRect();
-        if (m_callback)
-            m_callback->setFrameGeneration(item->frameGeneration() && item->isVisible(),
+        const bool frameGeneration = item->frameGeneration() && item->isVisible();
+        if (m_callback) {
+            m_callback->setFrameGeneration(frameGeneration,
                 m_window->screen() ? m_window->screen()->refreshRate() : 0.0);
+            m_callback->setFrameGenerationTarget(frameGeneration
+                ? item->frameGenerationTargetFps() : 0.0);
+        }
         m_viewport = StreamVideoItem::aspectFitRect(item->videoSize(), m_bounds.size().toSize());
         m_metalFxUpscaling = item->metalFxUpscaling() && item->isVisible();
         m_fsrUpscaling = item->fsrUpscaling() && item->isVisible();

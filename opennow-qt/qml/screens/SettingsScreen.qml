@@ -286,7 +286,8 @@ FocusScope {
             const colorDisabled = selectedCodec === "h264"
                 ? ["8bit_444", "10bit_420", "10bit_444"]
                 : selectedCodec === "av1" ? ["8bit_444", "10bit_444"] : []
-            const frameGeneration = String(settings.frameGeneration || "off") === "2x"
+            const frameGenerationValues = ["off", "auto", "2x"]
+            const frameGenerationIndex = Math.max(0, frameGenerationValues.indexOf(String(settings.frameGeneration || "off")))
             const hdrAvailable = HdrOutput.supported && ShellStore.hdrDecoderAvailable()
             const hdrDescription = HdrOutput.supported && !ShellStore.hdrDecoderAvailable()
                 ? qsTr("HDR requires a supported 10-bit H.265 or AV1 hardware decoder.") : HdrOutput.status
@@ -296,7 +297,7 @@ FocusScope {
                 choice("Color quality", "10-bit needs H.265 or AV1; 4:4:4 needs H.265", "colorQuality", ["8bit_420","8bit_444","10bit_420","10bit_444"], ["8-bit, YUV 4:2:0","8-bit, YUV 4:4:4","10-bit, YUV 4:2:0","10-bit, YUV 4:4:4"], "segments", colorDisabled),
                 {t:qsTr("HDR"), d:hdrDescription, v:Boolean(settings.enableHdr) ? qsTr("On") : qsTr("Off"), key:"enableHdr", values:[false,true], labels:[qsTr("Off"),qsTr("On")], control:"segments", selectedIndex:Boolean(settings.enableHdr) ? 1 : 0, disabledValues:hdrAvailable ? [] : [true]},
                 {t:"Max bitrate", d:"Maximum requested stream bitrate", v:Number(settings.maxBitrateMbps || 75) + " Mbps", key:"maxBitrateMbps", values:[25,50,75,100,150,200], labels:["25 Mbps","50 Mbps","75 Mbps","100 Mbps","150 Mbps","200 Mbps"], control:"slider", sliderPercent:Number(settings.maxBitrateMbps || 75) / 106},
-                {t:qsTr("Frame generation (Experimental)"), d:qsTr("Targets 120 displayed FPS from a 60 FPS stream. Requires a fast GPU and 120 Hz display; adds latency and artifacts."), v:frameGeneration ? qsTr("2×") : qsTr("Off"), key:"frameGeneration", values:["off","2x"], labels:[qsTr("Off"),qsTr("2×")], control:"segments", selectedIndex:frameGeneration ? 1 : 0},
+                {t:qsTr("Frame generation (Experimental)"), d:qsTr("Local interpolation targets 120 displayed FPS with 2×, while Auto 60 only fills missing frames while the stream runs below 60 FPS and stops once it reaches 60. Needs a fast GPU and a matching display; adds latency and artifacts."), v:[qsTr("Off"),qsTr("Auto 60"),qsTr("2×")][frameGenerationIndex], key:"frameGeneration", values:frameGenerationValues, labels:[qsTr("Off"),qsTr("Auto 60"),qsTr("2×")], control:"segments", selectedIndex:frameGenerationIndex},
                 choice(qsTr("Upscaling"), Qt.platform.os === "osx"
                     ? qsTr("Spatial upscaling for enlarged video. Uses extra GPU time; falls back to normal scaling when MetalFX is unavailable.")
                     : qsTr("FSR 1 upscales enlarged SDR video on the GPU. Uses extra GPU time; HDR and unavailable effects use normal scaling."),

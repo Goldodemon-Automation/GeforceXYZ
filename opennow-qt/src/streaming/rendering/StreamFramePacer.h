@@ -8,12 +8,16 @@
 class StreamFramePacer
 {
 public:
-    enum class Result { Duplicate, WarmingUp, Interpolate, Discontinuity, DisplayTooSlow, Overloaded, SourceRateLimit };
+    enum class Result { Duplicate, WarmingUp, Interpolate, Discontinuity, DisplayTooSlow, Overloaded, SourceRateLimit, TargetReached };
     enum class TimingSource { None, SourceTimestamps, ArrivalCadence };
     enum class Rejection { None, SequenceGap, TimestampRegression, TimestampJump, ArrivalGap, CadenceUnavailable };
 
+    // `targetFps` selects the pacing target. Zero keeps the doubling contract: interpolation is
+    // offered while the source cadence and the display refresh both fit a 2x presentation. A
+    // positive value caps the target at that fixed rate instead, so generation engages only
+    // while the source is below it and is released the moment the source reaches it.
     Result source(std::uint64_t sequence, std::uint64_t timestamp,
-                  std::int64_t now, double refreshRate)
+                  std::int64_t now, double refreshRate, double targetFps = 0)
     {
         if (m_hasSource && sequence == m_sequence && timestamp == m_timestamp)
             return Result::Duplicate;
@@ -72,9 +76,26 @@ public:
             m_rejection = Rejection::CadenceUnavailable;
             return Result::Discontinuity;
         }
-        if (m_interval < 16'000'000) return Result::SourceRateLimit;
-        if (!std::isfinite(refreshRate) || refreshRate < 1.95e9 / double(m_interval))
-            return Result::DisplayTooSlow;
+        if (targetFps > 0) {
+            const double sourceRate = 1.0e9 / double(m_interval);
+            // Release once the source is within 1% of the fixed target, and re-engage only when it
+            // falls more than 3% below it. The band keeps a source that is nominally on the target
+            // (a 60 FPS cadence measures 59.9999988) from toggling generation on and off every
+            // frame, and no interpolation is offered while the stream already reaches it.
+            const double threshold = targetFps * (m_targetEngaged ? 0.99 : 0.97);
+            if (sourceRate >= threshold) {
+                m_targetEngaged = false;
+                return Result::TargetReached;
+            }
+            if (!std::isfinite(refreshRate) || refreshRate < targetFps * 0.98)
+                return Result::DisplayTooSlow;
+            m_targetEngaged = true;
+        } else {
+            m_targetEngaged = false;
+            if (m_interval < 16'000'000) return Result::SourceRateLimit;
+            if (!std::isfinite(refreshRate) || refreshRate < 1.95e9 / double(m_interval))
+                return Result::DisplayTooSlow;
+        }
         if (pending) m_cooldownUntil = now + 2'000'000'000;
         if (now < m_cooldownUntil) return Result::Overloaded;
         return Result::Interpolate;
@@ -121,4 +142,5 @@ private:
     std::int64_t m_cooldownUntil = 0;
     bool m_hasSource = false;
     bool m_pending = false;
+    bool m_targetEngaged = false;
 };
